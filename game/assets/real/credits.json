@@ -1,0 +1,58 @@
+{
+ "thermal": {
+  "title": "川崎火力.JPG",
+  "artist": "Ketsudan",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:%E5%B7%9D%E5%B4%8E%E7%81%AB%E5%8A%9B.JPG",
+  "desc": "東京電力川崎火力発電所"
+ },
+ "solar": {
+  "title": "Kagoshima Nanatsujima Solar Plant 2020.jpg",
+  "artist": "Sakoppi",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Kagoshima_Nanatsujima_Solar_Plant_2020.jpg",
+  "desc": "鹿児島七ツ島メガソーラー発電所を錦江湾公園から望む"
+ },
+ "wind": {
+  "title": "NunobikiWindFarm200704294.jpg",
+  "artist": "BehBeh at Japanese Wikipedia",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "page": "https://commons.wikimedia.org/wiki/File:NunobikiWindFarm200704294.jpg",
+  "desc": "投稿者撮影、郡山布引風力発電所-ja:北海道ja:美瑛町の風景を連想させるなだらかな起伏の田園風景、2007年4月撮影"
+ },
+ "hydro": {
+  "title": "Kurobe Dam (14894503080).jpg",
+  "artist": "foooomio",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Kurobe_Dam_(14894503080).jpg",
+  "desc": "Kurobe Dam"
+ },
+ "geo": {
+  "title": "Hatchobaru Geothermal Power Plant Japan - panoramio.jpg",
+  "artist": "Herman Darnel Ibrahi…",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Hatchobaru_Geothermal_Power_Plant_Japan_-_panoramio.jpg",
+  "desc": "Hatchobaru Geothermal Power Plant Japan"
+ },
+ "nuclear": {
+  "title": "Kashiwazaki-Kariwa Nuclear Power Plant 14-Aug-2019 (cropped).jpg",
+  "artist": "皓月旗",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Kashiwazaki-Kariwa_Nuclear_Power_Plant_14-Aug-2019_(cropped).jpg",
+  "desc": "Aerial view of the Kashiwazaki-Kariwa Nuclear Power Plant seen from the seaside in 2019. Cropped version."
+ },
+ "battery": {
+  "title": "Nirazuka Battery Storage Power Station 2.jpg",
+  "artist": "Qurren",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Nirazuka_Battery_Storage_Power_Station_2.jpg",
+  "desc": "Nirazuka Battery Storage Power Station (Isesaki, Gunma)."
+ }
+}

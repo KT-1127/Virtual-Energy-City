@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- エネルギーシティ：チャッピー ＋ ⚡（Open EduTech Lab の アプリと 同じ 作り：色の タイル・チャッピーの 顔・右下に アイテム） -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16C7B8"/><stop offset="1" stop-color="#0A9488"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#bg)"/>
+  <!-- 耳 -->
+  <g stroke="#1B2430" stroke-width="10" stroke-linejoin="round" fill="#fff">
+    <path d="M56 108 L66 36 L120 80 Z"/><path d="M200 108 L190 36 L136 80 Z"/>
+  </g>
+  <path d="M73 56 L78 92 L104 80 Z" fill="#4FD8F0"/><path d="M183 56 L178 92 L152 80 Z" fill="#4FD8F0"/>
+  <!-- 頭・バイザー・顔 -->
+  <rect x="40" y="72" width="176" height="144" rx="68" fill="#fff" stroke="#1B2430" stroke-width="10"/>
+  <rect x="64" y="104" width="128" height="86" rx="40" fill="#1B2430"/>
+  <ellipse cx="102" cy="143" rx="13" ry="17" fill="#3BE3F5"/><ellipse cx="154" cy="143" rx="13" ry="17" fill="#3BE3F5"/>
+  <path d="M114 168 q7 9 14 0 q7 9 14 0" fill="none" stroke="#3BE3F5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- ⚡ -->
+  <path d="M202 138 L166 198 H192 L180 240 L232 172 H204 L222 138 Z" fill="#FFCB2E" stroke="#1B2430" stroke-width="9" stroke-linejoin="round"/>
+</svg>

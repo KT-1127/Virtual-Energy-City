@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TGT2Y7KLF3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-TGT2Y7KLF3');
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>エネルギーシティ</title>
+<meta name="description" content="町長になって、3Dの町に電気をとどけよう。いろいろな発電所を組み合わせて、夜もくもりの日も停電しない町をつくるゲームです。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="css/game.css">
+<script src="lib/three/three.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/facts.js"></script>
+<script src="js/realsize.js"></script>
+<script src="js/report.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/mirai.js"></script>
+<script src="js/world3d.js"></script>
+<script src="js/chappy2d.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/tutorial.js"></script>
+<script src="js/stages.js"></script>
+<script src="js/japan.js"></script>
+<script src="js/story.js"></script>
+</head>
+<body>
+<div id="app">
+  <div id="view"></div>
+  <div id="labels"></div>
+
+  <header id="hud">
+    <div class="chip time"><canvas id="dial"></canvas><span><b id="year">2026</b><small id="clock">6:00</small></span></div>
+    <div class="chip money" title="お金"><i>🪙</i><b id="money">0</b></div>
+    <div class="chip score" title="スコア"><i>⭐</i><b id="score">0</b></div>
+    <div class="chip gauge" id="hpChip" title="町の元気"><i>❤️</i><span class="bar"><em id="hpBar"></em></span></div>
+    <div class="chip gauge" id="earthChip" title="地球の熱さ（CO₂）"><i id="earthFace">🌏</i><span class="bar heat"><em id="earthBar"></em></span></div>
+    <div class="chip fc" id="forecast" title="あしたの天気"></div>
+    <div class="ctrl">
+      <button id="btnPause" title="一時停止">⏸</button>
+      <button id="btnSpeed" title="はやさ">▶</button>
+      <button id="btnMenu" title="メニュー">☰</button>
+    </div>
+  </header>
+
+  <aside id="meter">
+    <div class="m-face" id="meterFace">😊</div>
+    <canvas id="tube"></canvas>
+    <div class="m-bat" id="meterBat" hidden><i>🔋</i><span><em id="batBar"></em></span></div>
+  </aside>
+
+  <div id="mission" hidden></div>
+  <div id="banner" hidden></div>
+  <div id="daycard" hidden></div>
+  <div id="pop" hidden></div>
+  <div id="coach" hidden><div class="cp-box" id="coachChappy"></div><div class="say" id="coachSay"></div></div>
+  <div id="toast"></div>
+  <div id="spot" hidden><div id="spotHole"></div><div id="spotHand">👆</div></div>
+
+  <footer id="tray">
+    <div id="cards"></div>
+    <button id="btnRun" class="runbtn" hidden>▶ 1日<br>やってみる</button>
+    <button id="btnSave" class="save" title="節電おねがい"><i>📢</i><small>節電</small></button>
+  </footer>
+</div>
+
+<div id="modalBack" hidden><div id="modal"></div></div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

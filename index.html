@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TGT2Y7KLF3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-TGT2Y7KLF3');
+  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>エネルギーシティ | Open EduTech Lab</title>
+<meta name="description" content="町長になって町の電気をまかされる学習ゲーム。シナリオ（第1部〜第4部）で1時間ごとの電気のしくみをグラフと表で学び、日本エネルギーミックス大作戦3Dで日本全体のわりあいを考え、宣言する。数値は公的資料がもと。Open EduTech Lab 無料公開。">
+<meta property="og:title" content="エネルギーシティ | Open EduTech Lab">
+<meta property="og:description" content="停電しない町をつくり、グラフと表を読み、話し合って、わたしのエネルギーミックスを宣言する。中学校技術科向けのブラウザ学習ゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="city-images/v2-title.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="game/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="game/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="game/apple-touch-icon.png">
+<style>
+  :root {
+    --paper: #F3F5FB;
+    --card:  #FFFFFF;
+    --ink:   #16213D;
+    --soft:  #5A6485;
+    --line:  #DEE4F2;
+    --brand:      #0FB5AA;
+    --brand-deep: #0A7F78;
+    --brand-tint: #E2F6F4;
+    --blue:       #2F6FB0;
+    --blue-tint:  #E3EEF9;
+    --green:      #10B981;
+    --green-tint: #D1FAE5;
+    --orange:     #F59E0B;
+    --orange-tint:#FEF3C7;
+    --red:        #EF4444;
+    --red-tint:   #FEE2E2;
+    --violet:     #7C3AED;
+    --violet-tint:#EDE9FE;
+    --sky:        #0EA5E9;
+    --sky-tint:   #E0F2FE;
+    --sun:        #F59E0B;
+    --sun-tint:   #FEF3C7;
+    --font:   "Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    --shadow: 0 2px 8px rgba(22,33,61,.07), 0 16px 40px rgba(22,33,61,.10);
+    --radius: 20px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font); line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; }
+
+  main { max-width: 860px; margin: 0 auto 60px; padding: 0 16px; }
+
+  .section-label { font-size: .78rem; font-weight: 700; letter-spacing: .12em; color: var(--soft); text-transform: uppercase; margin: 48px 0 18px 4px; }
+  .section-title { font-size: 1.35rem; font-weight: 900; letter-spacing: -.02em; color: var(--ink); margin-bottom: 6px; }
+  .section-desc { font-size: .88rem; color: var(--soft); margin-bottom: 22px; line-height: 1.7; }
+
+  /* ── 機能ブロック ── */
+  .feature-block { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1.5px solid var(--line); overflow: hidden; margin-bottom: 28px; position: relative; }
+  .feature-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--accent, var(--brand)); }
+  .feature-block-head { padding: 28px 28px 0; display: flex; align-items: flex-start; gap: 16px; }
+  .fb-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .fb-meta { flex: 1; }
+  .fb-number { font-size: .72rem; font-weight: 700; letter-spacing: .1em; color: var(--accent, var(--brand)); margin-bottom: 3px; }
+  .fb-title { font-size: 1.18rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.25; margin-bottom: 4px; }
+  .fb-tag { display: inline-block; font-size: .7rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+  .fb-img { margin: 20px 28px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--paper); line-height: 0; }
+  .fb-img img { width: 100%; display: block; }
+  .fb-desc { padding: 18px 28px 0; font-size: .88rem; color: var(--soft); line-height: 1.85; }
+  .fb-desc strong { color: var(--ink); }
+  .fb-points { margin: 16px 28px 0; display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .fb-point { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: .855rem; line-height: 1.65; }
+  .fb-point:last-child { border-bottom: none; }
+  .fb-point .pt-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+  .fb-point .pt-body { flex: 1; }
+  .fb-point .pt-body strong { display: block; font-size: .87rem; font-weight: 800; color: var(--ink); margin-bottom: 1px; }
+  .fb-point .pt-body span { color: var(--soft); }
+  .feature-block-foot { padding: 20px 28px 28px; }
+
+  /* ── アプリ起動バナー ── */
+  .launch-box { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 0; }
+  .launch-banner { background: linear-gradient(135deg, #F5B301, #34B56A 45%, #0FB5AA 70%, #2F6FB0); color: #fff; padding: 32px 36px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .launch-banner .left { display: flex; flex-direction: column; gap: 10px; }
+  .launch-banner .badge-live { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.22); color: #fff; font-size: .72rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; width: fit-content; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: livepulse 1.6s infinite; }
+  @keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(74,222,128,.6); } 70% { box-shadow: 0 0 0 7px rgba(74,222,128,0); } 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); } }
+  .launch-banner h3 { font-size: 1.3rem; font-weight: 800; }
+  .launch-banner p  { font-size: .85rem; opacity: .92; max-width: 46ch; line-height: 1.7; }
+  .btn-launch { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--brand-deep); font-weight: 800; font-size: .92rem; padding: 14px 30px; border-radius: 12px; text-decoration: none; transition: all .2s; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,.18); }
+  .btn-launch:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.24); }
+  .launch-feats { padding: 18px 24px; display: flex; gap: 10px 14px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+  .launch-feat-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--sun-tint); color: #92400E; font-size: .75rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+  .launch-feat-pill.t { background: var(--brand-tint); color: var(--brand-deep); }
+
+  /* ── モード カード ── */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .mode-card { background: var(--card); border-radius: 16px; border: 1.5px solid var(--line); box-shadow: var(--shadow); padding: 20px; position: relative; overflow: hidden; }
+  .mode-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--mc, var(--brand)); }
+  .mode-card .mc-icon { font-size: 1.8rem; margin-bottom: 4px; }
+  .mode-card .mc-name { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+  .mode-card .mc-axes { display: inline-block; font-size: .7rem; font-weight: 700; background: var(--paper); color: var(--soft); padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); margin-bottom: 8px; }
+  .mode-card .mc-desc { font-size: .82rem; color: var(--soft); line-height: 1.65; }
+
+  /* ── 表 ── */
+  .energy-table { width: 100%; border-collapse: collapse; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+  .energy-table thead th { background: var(--brand-tint); color: var(--brand-deep); font-size: .78rem; font-weight: 700; padding: 11px 10px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .energy-table thead th:first-child { text-align: left; }
+  .energy-table tbody tr { border-bottom: 1px solid var(--line); background: var(--card); }
+  .energy-table tbody tr:last-child { border-bottom: none; }
+  .energy-table tbody td { padding: 10px 10px; font-size: .82rem; text-align: center; }
+  .energy-table tbody td:first-child { font-weight: 700; color: var(--ink); text-align: left; background: var(--paper); white-space: nowrap; }
+  .energy-table tbody td.l { text-align: left; color: var(--soft); }
+  .spec-table { width: 100%; border-collapse: collapse; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+  .spec-table thead th { background: var(--brand-tint); color: var(--brand-deep); font-size: .8rem; font-weight: 700; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+  .spec-table tbody tr { border-bottom: 1px solid var(--line); background: var(--card); }
+  .spec-table tbody tr:last-child { border-bottom: none; }
+  .spec-table tbody td { padding: 12px 16px; font-size: .86rem; }
+  .spec-table tbody td:first-child { font-weight: 700; color: var(--soft); width: 140px; background: var(--paper); }
+
+  /* ── ナビバー ── */
+  .nav-bar { position: sticky; top: 0; z-index: 100; background: rgba(243,245,251,.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); padding: 0 20px; }
+  .nav-bar .inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; height: 54px; gap: 10px; }
+  .nav-logo { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 7px; text-decoration: none; color: var(--ink); }
+  .nav-links { margin-left: auto; display: flex; gap: 14px; font-size: .78rem; font-weight: 700; }
+  .nav-links a { color: var(--soft); text-decoration: none; }
+  .nav-links a:hover { color: var(--brand-deep); }
+  .nav-play { background: var(--brand); color: #fff !important; padding: 6px 14px; border-radius: 999px; }
+
+  /* ── 授業活用 ── */
+  .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .lesson-card { background: var(--card); border-radius: 14px; border: 1.5px solid var(--line); padding: 18px 16px; position: relative; }
+  .lesson-card .lc-subj { font-size: .72rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; margin-bottom: 8px; display: inline-block; }
+  .lesson-card .lc-unit { font-size: .82rem; font-weight: 800; margin-bottom: 4px; color: var(--ink); }
+  .lesson-card .lc-desc { font-size: .78rem; color: var(--soft); line-height: 1.6; }
+  .flow-steps { display: flex; flex-direction: column; gap: 0; }
+  .flow-step { display: flex; gap: 16px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-step .fs-num { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .9rem; color: #fff; flex-shrink: 0; }
+  .flow-step .fs-body { flex: 1; }
+  .flow-step .fs-title { font-weight: 800; font-size: .9rem; margin-bottom: 2px; }
+  .flow-step .fs-desc { font-size: .82rem; color: var(--soft); line-height: 1.65; }
+  .flow-step .fs-time { font-size: .72rem; font-weight: 700; color: var(--soft); background: var(--paper); border: 1px solid var(--line); padding: 2px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+
+  /* ── 4つの見方カード・問いカード ── */
+  .view-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-bottom: 36px; }
+  .view-card { background: var(--card); border-radius: 14px; border: 1.5px solid var(--line); padding: 20px 18px; box-shadow: var(--shadow); text-align: center; }
+  .view-card .vc-icon { font-size: 2rem; margin-bottom: 6px; }
+  .view-card .vc-name { font-weight: 800; font-size: .92rem; margin-bottom: 2px; }
+  .view-card .vc-sub { font-size: .72rem; font-weight: 700; color: var(--brand-deep); margin-bottom: 6px; }
+  .view-card .vc-desc { font-size: .8rem; color: var(--soft); line-height: 1.6; }
+  .q-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-bottom: 32px; }
+  .q-list div { background: var(--card); border: 1.5px dashed #F4D27A; border-radius: 14px; padding: 12px 14px; font-size: .84rem; font-weight: 700; line-height: 1.6; }
+  .q-list div span { display: block; font-size: .72rem; color: var(--soft); font-weight: 700; margin-top: 2px; }
+
+  /* ── しくみ ── */
+  .sim-steps { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1.5px solid var(--line); padding: 24px 28px; margin-bottom: 20px; }
+  .meter-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 16px 28px 0; }
+  .meter-legend div { background: var(--paper); border-radius: 12px; padding: 10px 12px; font-size: .8rem; color: var(--soft); line-height: 1.55; }
+  .meter-legend b { display: block; color: var(--ink); font-size: .84rem; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+  .result-tag { display: inline-block; font-size: .74rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; }
+  .two-img { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 28px 0; }
+  .two-img img { width: 100%; border-radius: 12px; border: 1px solid var(--line); display: block; }
+  .note-box { margin: 16px 28px 0; padding: 12px 16px; background: var(--brand-tint); border-radius: 10px; border-left: 4px solid var(--brand); font-size: .84rem; color: var(--ink); line-height: 1.75; }
+
+  /* ── 規約 ── */
+  .notice-section { background: var(--brand-tint); padding: 52px 20px; margin-top: 60px; }
+  .notice-section .inner { max-width: 860px; margin: 0 auto; }
+  .notice-dl { display: flex; flex-direction: column; gap: 14px; font-size: .88rem; line-height: 1.75; }
+  .notice-row { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: baseline; }
+  .notice-dt { font-weight: 800; color: var(--brand-deep); white-space: nowrap; }
+  .notice-dd { color: var(--soft); }
+
+  footer { text-align: center; padding: 32px 16px 52px; font-size: .8rem; color: var(--soft); border-top: 1px solid var(--line); }
+  footer a { color: var(--soft); text-decoration: underline; }
+
+  @keyframes cardIn { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+  @media(prefers-reduced-motion:reduce){ * { animation:none!important; transition:none!important; } }
+  @media(max-width:600px) {
+    .launch-banner { flex-direction: column; align-items: flex-start; padding: 26px 22px; }
+    .mode-grid { grid-template-columns: 1fr; }
+    .nav-links a:not(.nav-play) { display: none; }
+    .feature-block-head, .fb-desc, .feature-block-foot { padding-left: 18px; padding-right: 18px; }
+    .fb-img, .fb-points, .two-img, .meter-legend, .note-box { margin-left: 18px; margin-right: 18px; }
+    .two-img { grid-template-columns: 1fr; }
+    .notice-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ナビバー -->
+<div class="nav-bar">
+  <div class="inner">
+    <span class="nav-logo">⚡ エネルギーシティ</span>
+    <nav class="nav-links">
+      <a href="#overview">概要</a>
+      <a href="#modes">モード</a>
+      <a href="#features">学びのしかけ</a>
+      <a href="#lesson">授業活用</a>
+      <a href="#data">数値の根拠</a>
+      <a class="nav-play" href="game/index.html">▶ プレイ</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ── TOP画像 ── -->
+<header>
+  <div style="padding:28px 28px 0; text-align:center;">
+    <img src="city-images/v2-title.png" style="width:100%;max-width:1100px;display:block;margin:0 auto;border-radius:20px;box-shadow:var(--shadow);" alt="エネルギーシティ タイトル画面。シナリオ・大作戦3D・おまけを選べる">
+  </div>
+</header>
+
+<!-- ── アプリ起動バナー ── -->
+<div style="background:var(--paper);padding:32px 0 0;">
+  <div style="width:90%;max-width:1000px;margin:0 auto;">
+    <div class="launch-box">
+      <div class="launch-banner">
+        <div class="left">
+          <span class="badge-live"><span class="live-dot"></span>ブラウザですぐ遊べる</span>
+          <h3>エネルギーシティで学ぼう</h3>
+          <p>町長になって、町の電気をまかされる。1時間ごとの「使う量」と「つくる量」から停電のしくみを学び、日本全体のエネルギーミックスを考え、最後は自分の考えを宣言する。数値は国の統計・審議会資料などをもとにしています。</p>
+        </div>
+        <a href="game/index.html" class="btn-launch">▶ 今すぐプレイ</a>
+      </div>
+      <div class="launch-feats">
+        <span class="launch-feat-pill">📘 シナリオ 第1部〜第4部</span>
+        <span class="launch-feat-pill">🗾 日本エネルギーミックス大作戦 3D</span>
+        <span class="launch-feat-pill">🗺️ おまけ：町の地図で 2050年へ</span>
+        <span class="launch-feat-pill t">🔍 グラフ探偵・⚖️ 表を読もう</span>
+        <span class="launch-feat-pill t">💬 話し合いタイム</span>
+        <span class="launch-feat-pill t">📝 学習レポート（PDF）</span>
+        <span class="launch-feat-pill t">📏 ほんとうの大きさ（写真）</span>
+        <span class="launch-feat-pill t">📱 スマホ・タブレット対応</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ── 概要 ── -->
+  <p class="section-label" id="overview">OVERVIEW</p>
+  <p class="section-title">体験する → グラフと表を読む → 話し合う、をくりかえして考える</p>
+  <p class="section-desc">電気は、使う量とつくる量が「毎時間」合っていないと停電します。エネルギーシティでは、選んだ発電所で町の1日をためし、停電した時間や、あまって捨てた電気をグラフから読みとります。クリアしても終わりではなく、ほかの選択と表でくらべ、自分の選択が負けているものさしを見つけます。どの電源にも長所と弱点があり、「何を大事にするか」で答えが変わることに気づけるように作りました。</p>
+
+  <!-- ものさしカード -->
+  <div class="view-grid">
+    <div class="view-card">
+      <div class="vc-icon">⚡</div>
+      <div class="vc-name">安定</div>
+      <div class="vc-sub">停電しない日の数</div>
+      <div class="vc-desc">晴れ・雨・風なし・猛暑などの日を、1時間ごとにためす。1年の平均で足りていても、夕方に足りなければ停電する。</div>
+    </div>
+    <div class="view-card">
+      <div class="vc-icon">🌏</div>
+      <div class="vc-name">環境</div>
+      <div class="vc-sub">CO₂</div>
+      <div class="vc-desc">発電所をつくる・運ぶ・こわすまでふくめた CO₂（ライフサイクル）で比べる。</div>
+    </div>
+    <div class="view-card">
+      <div class="vc-icon">🪙</div>
+      <div class="vc-name">経済</div>
+      <div class="vc-sub">建設費・燃料代・発電コスト</div>
+      <div class="vc-desc">建設費は「はじめに1回」、燃料代は「動かした分だけ毎日」。国の発電コスト検証の値がもと。</div>
+    </div>
+    <div class="view-card">
+      <div class="vc-icon">🛡️</div>
+      <div class="vc-name">安全・自給・社会</div>
+      <div class="vc-sub">国産率・町の人の声</div>
+      <div class="vc-desc">燃料の輸入、事故や災害への強さ、発電所の近くに住む人・温泉・漁業の心配。</div>
+    </div>
+  </div>
+
+  <table class="spec-table" style="margin-bottom:40px;">
+    <thead>
+      <tr><th>項目</th><th>内容</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>プラットフォーム</td><td>Web アプリ（ブラウザで動作・インストール不要）</td></tr>
+      <tr><td>技術スタック</td><td>HTML5 / CSS3 / Vanilla JavaScript / Three.js（3D）/ Web Audio API（BGM・効果音）</td></tr>
+      <tr><td>動かし方</td><td><code>game/index.html</code> を開くだけ。インターネット接続なしでも遊べる（静的ファイルのみ）</td></tr>
+      <tr><td>対象</td><td>中学生（技術科「エネルギー変換の技術」が中心）・高校生・一般</td></tr>
+      <tr><td>プレイ時間</td><td>シナリオ 各部 約15〜20分 ／ 大作戦3D 1チャプター 約5分 ／ おまけ 約20分（4〜5時間の単元で使う例あり）</td></tr>
+      <tr><td>動作環境</td><td>Chrome / Edge / Safari / Firefox（PC・タブレット・スマートフォン、WebGL 対応端末）</td></tr>
+      <tr><td>記録</td><td>選んだ道・宣言・話し合いメモ・ふりかえりは、そのブラウザの中にだけ保存。学習レポートとして PDF に保存できる</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── モード ── -->
+  <p class="section-label" id="modes">MODES</p>
+  <p class="section-title">メインは「シナリオ」と「大作戦3D」、おまけが1つ</p>
+  <p class="section-desc">町の1日（1時間ごと）から始めて、日本全体のわりあいへ。最後に、地図の上で「どこに・いつ建てるか」を考えるおまけがあります。</p>
+
+  <!-- シナリオ -->
+  <div class="feature-block" style="--accent:var(--violet)">
+    <div class="feature-block-head">
+      <div class="fb-icon" style="background:var(--violet-tint)">📘</div>
+      <div class="fb-meta">
+        <div class="fb-number">MAIN 1</div>
+        <div class="fb-title">シナリオ「町の電気をまかされた！」第1部〜第4部</div>
+        <span class="fb-tag" style="background:var(--violet-tint);color:var(--violet)">1話ずつ選ぶ → 1日をためす → グラフと表を読む</span>
+      </div>
+    </div>
+    <div class="fb-img">
+      <img src="city-images/v2-scenario.png" alt="第1部第1話の選択肢。太陽光7つ・火力1つ・太陽光5つと風力1つに、昼と夜に出せる量の札がついている">
+    </div>
+    <div class="fb-desc">
+      話ごとに3つ前後の選択肢から選び、その町の1日をためします。選択肢には「☀️昼 ⚡25 ／ 🌙夜 ⚡0」のように、グラフの「使う量」と同じものさしで出せる量を表示。太陽光7つと火力1つの大きさのちがいが、数で見えます。
+    </div>
+    <div class="fb-points">
+      <div class="fb-point"><span class="pt-icon">1️⃣</span><div class="pt-body"><strong>第1部　町の電気をまかされた</strong><span>昼・夜・燃料の値上がりなど、1話ずつ。グラフ探偵で停電・すてた電気・ためた電気を見つける。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">2️⃣</span><div class="pt-body"><strong>第2部　町が大きくなる</strong><span>工場が来て、⚛️原子力・♨️地熱が登場。はじめに📣公約（安定・環境・経済・安全・自給から3つ）を立て、★は公約を守れたかでつく。大地震・温泉の反対・輸入燃料の値上がり・雨の日がつづく、など選んだ電源で話が分かれる。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">3️⃣</span><div class="pt-body"><strong>第3部　みらいの町を設計しよう</strong><span>公約・予算・5つの日（晴れ・雨・風なし・大地震・電池の点検）を条件に、発電所と設備を組み合わせて設計。ためして原因を考えて直し、強み・弱み・役に立ったものを選んでふりかえる。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">4️⃣</span><div class="pt-body"><strong>第4部　日本の大臣へ</strong><span>第3部の公約を日本でも守れるか、3Dの日本地図でわりあいを決める。ふやした電源ごとに「国民の声」（原子力の立地地域・温泉旅館・漁師・ダムの村・火力の町など）が出て、1つ選んで大臣として説明を書く。国の2040年度のめやすとくらべてから宣言する。</span></div></div>
+    </div>
+    <div class="two-img">
+      <img src="city-images/v2-graph.png" alt="グラフ探偵。1時間ごとのグラフで停電した時間をタップする">
+      <img src="city-images/v2-table.png" alt="表を読もう。自分の選択とほかの選択を、建設費・燃料代・CO₂でくらべる">
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <!-- 大作戦3D -->
+  <div class="feature-block" style="--accent:var(--red)">
+    <div class="feature-block-head">
+      <div class="fb-icon" style="background:var(--red-tint)">🗾</div>
+      <div class="fb-meta">
+        <div class="fb-number">MAIN 2</div>
+        <div class="fb-title">日本エネルギーミックス大作戦 3D</div>
+        <span class="fb-tag" style="background:var(--red-tint);color:var(--red)">6つの電源のわりあいを決める大臣に</span>
+      </div>
+    </div>
+    <div class="fb-img">
+      <img src="city-images/v2-3d.png" alt="大作戦3Dのプレイ画面。左に電源のわりあい、右にものさしと4つの日">
+    </div>
+    <div class="fb-desc">
+      スライダーで火力・原子力・水力・太陽光・風力・地熱とバイオのわりあいを決めると、3Dの日本地図とものさし（CO₂・発電コスト・停電しない日・国産率など）が変わります。上限は国の2030年度・2040年度のめやすで、「100%水力」のような日本でできない組み合わせは選べません。どのチャプターも「4つの日（晴れ・雨・風なし・猛暑）どれも停電なし」が目標の1つです。
+    </div>
+    <div class="fb-points">
+      <div class="fb-point"><span class="pt-icon">①〜⑤</span><div class="pt-body"><strong>おすすめの順番と、むずかしさ（★1〜5）</strong><span>①はじめてのミッション → ②ストーリー（環境・安定・持続の3ルート→2050年）→ ③リアル日本（2024年度の再現→2030年度→2040年度）→ ④アドバンス（ものさし7つ）→ ⑤博士モード（ものさし10）。フリーはいつでも。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">⚡</span><div class="pt-body"><strong>停電した日は「どうすれば？」に答えてから</strong><span>その日の1時間ごとのグラフを見て、天気に左右されない電源・ためた電気の役わりを考える。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">📊</span><div class="pt-body"><strong>結果は自分で判定してから答えを見る</strong><span>2024年とくらべて、ものさしを1つずつ「よく・おなじ・わるく」と判定。下がったものは「どれだけ下がったか」「目標は守れているか」を伝え、何かをゆずる判断を考える。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">📖</span><div class="pt-body"><strong>電源の特徴カード</strong><span>天気と時間での変わり方・1日の形・6つの電源とのくらべ・上限の理由。本物の発電所の写真と大きさも見られる。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">📜</span><div class="pt-body"><strong>わたしのエネルギーミックス宣言</strong><span>大事にする順と、たよる電源・弱点のおぎない方・くらしでできることを書いて、画像で保存。</span></div></div>
+    </div>
+    <div class="two-img">
+      <img src="city-images/v2-3dmenu.png" alt="大作戦3Dのモード選択。①〜⑤の順番と、むずかしさの★">
+      <img src="city-images/v2-3dres.png" alt="大作戦3Dの結果。ものさしを1つずつよく・おなじ・わるくで判定する">
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <!-- おまけ -->
+  <div class="feature-block" style="--accent:var(--brand)">
+    <div class="feature-block-head">
+      <div class="fb-icon" style="background:var(--brand-tint)">🗺️</div>
+      <div class="fb-meta">
+        <div class="fb-number">おまけ</div>
+        <div class="fb-title">町の地図で 2050年へ ——「どこに」「いつ」建てる？</div>
+        <span class="fb-tag" style="background:var(--brand-tint);color:var(--brand-deep)">立地 · 建てるのにかかる年数 · 使える年数</span>
+      </div>
+    </div>
+    <div class="fb-img">
+      <img src="city-images/v2-mirai.png" alt="おまけのプレイ画面。地図の上に「あと8年」「引退まで4年」の札、右に建設中と引退予定の一覧">
+    </div>
+    <div class="fb-desc">
+      2026年の町で、時間を止めて地図に発電所を建て、「⏩ 3年すすめる」をくりかえして2050年をめざします。建てるのに何年もかかり（☀️3年・💧7年・💨8年・🔥約10年・♨️約14年）、一度建てると何十年も使います（☀️💨25年・🔥💧♨️40年）。使う電気は2040年まで増える見通しです。古い発電所の引退の波を見こして、早めに建てはじめないと停電する年が出ます。住宅・温泉・海ぞい・ダムの近くでは町の人の声が出て、話し合うと完成がおくれます。
+    </div>
+    <div style="margin:16px 28px 0;overflow-x:auto;">
+      <table class="energy-table">
+        <thead><tr><th>進め方（計算でためした例）</th><th>結果</th></tr></thead>
+        <tbody>
+          <tr><td>何もしない</td><td class="l">2032年から停電、2038年から大停電（古い火力が引退）</td></tr>
+          <tr><td>🔥 火力だけでつなぐ</td><td class="l">完成まで約10年。間にあわない年は停電し、CO₂は2026年より増える</td></tr>
+          <tr><td>☀️🔋 太陽光と蓄電池だけ</td><td class="l">2038年から雨・猛暑の日に停電</td></tr>
+          <tr><td>2035年から始める</td><td class="l">2038〜2047年に停電がつづく</td></tr>
+          <tr><td>早めに地熱・風力・水力も建てる</td><td class="l">停電なしで、CO₂は2026年の約2割に</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="two-img">
+      <img src="city-images/v2-mirai2.png" alt="3年後の報告。完成・引退と、4つの日で停電した日のグラフ">
+      <img src="city-images/v2-p4.png" alt="第4部の国民の声。ふやした電源ごとに心配の声が出て、1つ選んで説明を書く">
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <!-- ── 学びのしかけ ── -->
+  <p class="section-label" id="features">学びのしかけ</p>
+  <p class="section-title">「クリア＝かんぺき」にしない</p>
+  <p class="section-desc">正解をなぞって終わらないように、読みとる・くらべる・説明する場面を、進むための条件にしています。</p>
+
+  <div class="feature-block" style="--accent:var(--blue)">
+    <div class="fb-points" style="margin-top:24px;">
+      <div class="fb-point"><span class="pt-icon">🔍</span><div class="pt-body"><strong>グラフ探偵</strong><span>1時間ごとのグラフで「いちばん使う時間」「停電した時間」「すてた電気」「ためた電気」をタップして見つける。停電は黒、すてた電気は灰色で、電源の色とまぎれない。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">⚖️</span><div class="pt-body"><strong>表を読もう</strong><span>クリアしても、ほかの選択と表でくらべて「自分の選択が負けているものさし」と「ほかの選択の弱点」を見つけるまで次へ進めない。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">📣</span><div class="pt-body"><strong>公約</strong><span>大事にするものを自分で3つ決め、守れたかで★がつく。公約に入れなかったものさしがどうなったかを話し合いの材料にする。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">🔋</span><div class="pt-body"><strong>蓄電池だけが答えではない</strong><span>あまった電気の使いみち（ためる・時間をずらす・ほかの地域へ送る・少しすてる）にはどれも弱点がある。第3部の「電池の点検」の日は約35%が止まる（韓国 2019年の例）。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">💬</span><div class="pt-body"><strong>話し合いタイム</strong><span>各部の終わりに、自分のエンディング・公約・ものさし・えらんだ道をまとめた「🪪わたしのカード」と、話し方のヒント（話型）を表示。友だちの考えで「なるほど」と思ったことをメモに残す。</span></div></div>
+      <div class="fb-point"><span class="pt-icon">📝</span><div class="pt-body"><strong>学習レポート（PDF）</strong><span>選んだ道・グラフの読みとり・公約・宣言・国民への説明・話し合いメモ・自分の意見を1枚に。評価のめやす（知識・技能／思考・判断・表現／主体的に学習に取り組む態度）と自己評価・先生欄つき。</span></div></div>
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <div class="feature-block" style="--accent:var(--orange)">
+    <div class="feature-block-head">
+      <div class="fb-icon" style="background:var(--orange-tint)">📏</div>
+      <div class="fb-meta">
+        <div class="fb-number">REAL SIZE</div>
+        <div class="fb-title">ほんとうの発電所の大きさを、写真で</div>
+        <span class="fb-tag" style="background:var(--orange-tint);color:#92400E">7つの電源 · ウィキメディア・コモンズの写真</span>
+      </div>
+    </div>
+    <div class="fb-img">
+      <img src="city-images/v2-real.png" alt="ほんとうの大きさのカード。太陽光1つを本物にすると約40万kW、七ツ島メガソーラー約5.7か所分、約730ha">
+    </div>
+    <div class="fb-desc">
+      ゲームの🔥1つを本物の川崎火力発電所1号系列（150万kW・約28ha）とすると、☀️1つは約40万kWのメガソーラーで、広さは約730ha（東京ドーム約150個分）。写真の発電所を「ものさし」にして、何か所分・何基分かで見せます。ゲームの町の大きさとは合わないことも画面に書いています。
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <!-- ── キャラクター ── -->
+  <p class="section-label" id="characters">CHARACTERS</p>
+  <p class="section-title">7人の発電キャラ</p>
+  <p class="section-desc">発電所はみんな、顔のある「ブロックの子」。太陽光発電は日がしずむとナイトキャップで寝てしまい、火力発電は全力のとき汗をかき、風力発電は風がないとしょんぼりします。</p>
+
+  <div class="feature-block" style="--accent:var(--orange)">
+    <div style="margin:24px 28px 0;overflow-x:auto;">
+      <table class="energy-table">
+        <thead>
+          <tr>
+            <th>電源</th>
+            <th>建設費<br><span style="font-weight:400;font-size:.7rem;">🪙 1つ</span></th>
+            <th>出力<br><span style="font-weight:400;font-size:.7rem;">⚡ 1つ</span></th>
+            <th>CO₂<br><span style="font-weight:400;font-size:.7rem;">g/kWh</span></th>
+            <th>本物にすると</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>☀️ 太陽光</td><td>6</td><td>4（晴れの昼だけ）</td><td>38</td><td class="l">約40万kW・約730ha</td></tr>
+          <tr><td>🔥 火力</td><td>35</td><td>15（上げ下げできる）</td><td>690</td><td class="l">約150万kW・約28ha</td></tr>
+          <tr><td>💧 水力</td><td>32</td><td>5.6（ほぼ一定）</td><td>11</td><td class="l">黒部川第四 約1.7か所分</td></tr>
+          <tr><td>💨 風力</td><td>19</td><td>7（風しだい）</td><td>26</td><td class="l">風車 約350基</td></tr>
+          <tr><td>🔋 蓄電池</td><td>20</td><td>出す力6・ためる量24</td><td>0</td><td class="l">紀の川蓄電所 約13か所分（出力で比べた数）</td></tr>
+          <tr><td>♨️ 地熱</td><td>31</td><td>4.5（一定）</td><td>13</td><td class="l">八丁原 約4か所分</td></tr>
+          <tr><td>⚛️ 原子力</td><td>141</td><td>27（一定）</td><td>20</td><td class="l">柏崎刈羽6号機 約2基分</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin:10px 28px 0;font-size:.78rem;color:var(--soft);">
+      ※ 建設費は「1つの出力 × 国の1kWあたりの建設費（発電コスト検証2025）」で、🔥1つ＝🪙35にそろえた値。CO₂は電力中央研究所のライフサイクルCO₂（火力は2024年度の石炭・LNG・石油のわりあいで平均）。
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <!-- ── しくみ ── -->
+  <p class="section-label">SIMULATION</p>
+  <p class="section-title">1時間ごとに「使う量」と「つくる量」をくらべる</p>
+  <p class="section-desc">使う量・晴れの日の太陽光・風の1日の形は、東京エリアの2024年の実データからつくっています。毎時間、つぎの順で電気を割りあてます。</p>
+
+  <div class="sim-steps">
+    <div class="flow-steps">
+      <div class="flow-step"><div class="fs-num" style="background:var(--orange);">1</div><div class="fs-body"><div class="fs-title">天気や時間で決まる電源を足す</div><div class="fs-desc">原子力・地熱・水力・風力・太陽光と、動いている火力の最低出力（3割）。雨の日の太陽光は晴れの日の約3割、風なしの日の風力はふつうの日の約1割（東京エリア 2024年）。</div></div></div>
+      <div class="flow-step"><div class="fs-num" style="background:var(--green);">2</div><div class="fs-body"><div class="fs-title">あまったら蓄電池にためる → それでもあまれば捨てる</div><div class="fs-desc">ためて出すと1割へる（蓄電池）。捨てる（出力制御）のは太陽光・風力から。</div></div></div>
+      <div class="flow-step"><div class="fs-num" style="background:var(--sky);">3</div><div class="fs-body"><div class="fs-title">足りなければ蓄電池から出す・火力を上げる</div><div class="fs-desc">ためた分しか出せない。火力は選んだ分（建てた分）までしか動かない。燃料代と CO₂ がかかる。</div></div></div>
+      <div class="flow-step"><div class="fs-num" style="background:#1E2A38;">4</div><div class="fs-body"><div class="fs-title">それでも足りない分が停電</div><div class="fs-desc">グラフでは黒で表示。どの日の何時に足りなかったかから、原因と対策を考える。</div></div></div>
+    </div>
+  </div>
+
+  <!-- ── 授業活用 ── -->
+  <p class="section-label" id="lesson">授業活用</p>
+  <p class="section-title">4〜5時間の単元で使う例</p>
+  <p class="section-desc">中学校技術科「エネルギー変換の技術」の、技術の見方・考え方（社会からの要求・安全性・環境への負荷・経済性）を軸にしています。各部の終わりに話し合いタイムがあります（家庭学習では OFF にできます）。</p>
+
+  <div style="background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1.5px solid var(--line);padding:28px;margin-bottom:32px;">
+    <div style="font-size:.8rem;font-weight:700;letter-spacing:.1em;color:var(--soft);margin-bottom:12px;">RECOMMENDED FLOW</div>
+    <div style="font-size:1.05rem;font-weight:900;margin-bottom:20px;">単元の流れ（例）</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="fs-num" style="background:var(--brand);">1</div>
+        <div class="fs-body"><div class="fs-title">第1部＋グラフ探偵</div><div class="fs-desc">話し合い：同じ話でちがう選択をした人と、理由と結果をくらべる。</div></div>
+        <div class="fs-time">1時間目</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num" style="background:var(--violet);">2</div>
+        <div class="fs-body"><div class="fs-title">第2部：公約を立てる</div><div class="fs-desc">話し合い：ちがう公約の人と「公約に入れなかったものさしがどうなったか、それでよいと考えた理由」をくらべる。</div></div>
+        <div class="fs-time">2時間目</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num" style="background:var(--green);">3</div>
+        <div class="fs-body"><div class="fs-title">第3部：設計 → ためす → 直す → ふりかえり</div><div class="fs-desc">話し合い：いちばんちがう町を設計した人と「どの日に強いか」「何をゆずったか」をくらべる。</div></div>
+        <div class="fs-time">3時間目</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num" style="background:var(--orange);">4</div>
+        <div class="fs-body"><div class="fs-title">第4部：日本の大臣へ → 宣言</div><div class="fs-desc">話し合い：ちがう国民の声を選んだ人と、どう説明したかをくらべる。大作戦3Dのリアル日本で国の計画に挑戦してもよい。</div></div>
+        <div class="fs-time">4時間目</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num" style="background:#1E2A38;">5</div>
+        <div class="fs-body"><div class="fs-title">学習レポートを書いて PDF で提出</div><div class="fs-desc">評価のめやすに沿って自己評価。おまけ（町の地図で2050年へ）は発展・家庭学習に。</div></div>
+        <div class="fs-time">5時間目</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson-grid">
+    <div class="lesson-card">
+      <span class="lc-subj" style="background:var(--brand-tint);color:var(--brand-deep)">技術</span>
+      <div class="lc-unit">エネルギー変換の技術</div>
+      <div class="lc-desc">発電方式ごとの特徴（出力の調整・天候への依存・立地・建設にかかる年数）と、技術の見方・考え方による評価と折り合い。</div>
+    </div>
+    <div class="lesson-card">
+      <span class="lc-subj" style="background:var(--green-tint);color:var(--green)">理科</span>
+      <div class="lc-unit">気象・エネルギー・環境</div>
+      <div class="lc-desc">日射・雨・風と発電量の関係。ライフサイクルの CO₂。エネルギーをためる技術とその限界。</div>
+    </div>
+    <div class="lesson-card">
+      <span class="lc-subj" style="background:var(--orange-tint);color:var(--orange)">社会</span>
+      <div class="lc-unit">資源・エネルギーと公民</div>
+      <div class="lc-desc">燃料の輸入と自給率、立地地域の声と合意形成、2030年度・2040年度の国のめやす。</div>
+    </div>
+    <div class="lesson-card">
+      <span class="lc-subj" style="background:var(--violet-tint);color:var(--violet)">総合</span>
+      <div class="lc-unit">探究学習</div>
+      <div class="lc-desc">自分のエネルギーミックス宣言をもとに提案。ゲーム（モデル）と現実のちがいを調べる。</div>
+    </div>
+  </div>
+
+  <!-- 問いの例 -->
+  <p class="section-title" style="font-size:1.1rem;">話し合いに使える問いの例</p>
+  <p class="section-desc">正解が1つではない問いです。ゲームの体験とグラフ・表を根拠に話し合えます。</p>
+  <div class="q-list">
+    <div>太陽光をもっと増やせば、問題はなくなる？<span>夜・雨の日・ためられる量はどうだった？</span></div>
+    <div>公約に入れなかったものさしは、どうなった？<span>それでよいと考えた理由は？</span></div>
+    <div>あなたの町の「いちばんの弱点」はどの日？<span>5つの日・4つの日の結果から</span></div>
+    <div>国民の声に、どう説明する？<span>数字がよくなっても、こまる人はいる</span></div>
+    <div>国の2040年度のめやすと、どこがちがう？<span>国の案は何を前提にしている？</span></div>
+    <div>もっと早く決めればよかったことは？<span>建てるのにかかる年数と、引退の時期から</span></div>
+  </div>
+
+  <!-- ── 数値の根拠 ── -->
+  <p class="section-label" id="data">DATA</p>
+  <p class="section-title">数値の根拠</p>
+  <p class="section-desc">生徒が「世の中の正解」と受けとらないように、ゲームの数は公的な統計・審議会資料などから取り、根拠がないものは使わないか「ゲームのきまり」と画面に書いています。数値ごとの根拠は <code>game/数値の根拠チェック.md</code> にまとめています。</p>
+  <div class="feature-block" style="--accent:var(--green)">
+    <div class="fb-points" style="margin-top:24px;">
+      <div class="fb-point"><span class="pt-icon">📈</span><div class="pt-body"><strong>使う量・太陽光・風・天気の倍率</strong><span>東京電力パワーグリッド「エリア需給実績」2024年</span></div></div>
+      <div class="fb-point"><span class="pt-icon">💴</span><div class="pt-body"><strong>建設費・燃料費・運転維持費・設備利用率・発電コスト・稼働年数</strong><span>発電コスト検証ワーキンググループ（2021年・2025年2月）</span></div></div>
+      <div class="fb-point"><span class="pt-icon">🌫️</span><div class="pt-body"><strong>CO₂（ライフサイクル）</strong><span>電力中央研究所</span></div></div>
+      <div class="fb-point"><span class="pt-icon">🗾</span><div class="pt-body"><strong>電源構成・国のめやす・使う量の見通し</strong><span>資源エネルギー庁 エネルギー需給実績（2024年度確報）、第6次・第7次エネルギー基本計画</span></div></div>
+      <div class="fb-point"><span class="pt-icon">⏳</span><div class="pt-body"><strong>建てるのにかかる年数</strong><span>FIT/FIP の運転開始期限、資源エネルギー庁・調達価格等算定委員会の資料</span></div></div>
+      <div class="fb-point"><span class="pt-icon">🎮</span><div class="pt-body"><strong>ゲームのきまり（根拠なし・画面に表示）</strong><span>町の大きさ、チャプターの目標の数、安全性・持続可能性の点数（本家「大作戦」の考え方）、話し合いで完成がおくれる年数など</span></div></div>
+    </div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+  <!-- 先生向け -->
+  <div style="background:var(--brand-tint);border-radius:14px;padding:20px 24px;margin-bottom:32px;border-left:4px solid var(--brand);">
+    <p style="font-size:.9rem;font-weight:700;color:var(--brand-deep);margin-bottom:6px;">🛠️ 先生向け</p>
+    <p style="font-size:.85rem;color:var(--soft);margin-bottom:10px;">電源の数値・天気・セリフは <code>game/js/config.js</code>、授業での使い方・評価のめやすは <code>game/README.md</code>、数値の出典は <code>game/数値の根拠チェック.md</code> にあります。話し合いタイムは、シナリオの部メニューで OFF にできます。</p>
+    <a href="game/index.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--brand);color:#fff;border-radius:10px;text-decoration:none;font-size:.88rem;font-weight:700;box-shadow:0 2px 8px rgba(15,181,170,.3);">▶ ゲームを開く</a>
+  </div>
+
+  <div class="feature-block" style="--accent:var(--sky)">
+    <div class="feature-block-head">
+      <div class="fb-icon" style="background:var(--sky-tint)">📱</div>
+      <div class="fb-meta">
+        <div class="fb-number">DEVICES</div>
+        <div class="fb-title">タブレット・スマートフォンでも</div>
+        <span class="fb-tag" style="background:var(--sky-tint);color:var(--sky)">タッチ操作 · 画面に合わせた配置</span>
+      </div>
+    </div>
+    <div class="fb-desc">1人1台端末で遊べます。WebGL（3D 表示）に対応していない古い端末では動かない場合があります。動きが重いときは、ほかのタブを閉じてお試しください。</div>
+    <div class="feature-block-foot"></div>
+  </div>
+
+</main>
+
+<!-- ── 規約 ── -->
+<section class="notice-section">
+  <div class="inner">
+    <p class="section-label">Notice</p>
+    <p class="section-title" style="margin-bottom:24px;">ご利用にあたって</p>
+    <dl class="notice-dl">
+      <div class="notice-row">
+        <dt class="notice-dt">📊 データについて</dt>
+        <dd class="notice-dd">ゲームの数値は、公的な統計・審議会資料などをもとに、遊びながら学べるように単純化した「モデル」です。使う量や天気の倍率は東京エリアの実績で、全国や毎年の平均とはちがいます。根拠のない数は「ゲームのきまり」と画面に書いています。授業で数値を扱う際は、最新の公表値をご確認ください。</dd>
+      </div>
+      <div class="notice-row">
+        <dt class="notice-dt">🎓 活用について</dt>
+        <dd class="notice-dd">授業・研究発表・探究学習での活用を歓迎します。</dd>
+      </div>
+      <div class="notice-row">
+        <dt class="notice-dt">💾 記録と解析について</dt>
+        <dd class="notice-dd">選んだ道・宣言・話し合いメモ・ふりかえりは、使っているブラウザの中（localStorage）にだけ保存されます。書いた文章やプレイの記録がサーバーに送られることはありません。この説明ページとアプリは、アクセス解析に Google アナリティクスを使用しています。</dd>
+      </div>
+      <div class="notice-row">
+        <dt class="notice-dt">📷 写真</dt>
+        <dd class="notice-dd">「ほんとうの大きさ」の写真は、ウィキメディア・コモンズの CC ライセンスの写真です（作者・ライセンスはアプリの画面と <code>game/README.md</code> に記載）。</dd>
+      </div>
+      <div class="notice-row">
+        <dt class="notice-dt">©️ 著作権</dt>
+        <dd class="notice-dd">&copy; TAKANO tools | エネルギーシティ　／　3D 表示に three.js（MIT License）を使用しています。</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  &copy; Open EduTech Lab
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>エネルギーシティ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div class="year"><b id="hYear">2026</b><small>年</small></div>
+    <div class="stat" title="予算"><i>💰</i><span><small>予算</small><b id="hMoney">0</b></span></div>
+    <div class="stat" title="満足度"><i>😊</i><span><small>満足度</small><b id="hSat">0</b></span></div>
+    <div class="stat" title="CO₂（2025年比）"><i>🌏</i><span><small>CO₂</small><b id="hCo2">100%</b></span></div>
+    <div class="stat" title="電気代（円/kWh）"><i>⚡</i><span><small>電気代</small><b id="hPrice">--</b></span></div>
+    <div class="stat" title="家の数"><i>🏠</i><span><small>家</small><b id="hHouses">0</b></span></div>
+    <div class="stat score" title="スコア"><i>⭐</i><span><small>スコア</small><b id="hScore">0</b></span></div>
+    <button class="icon-btn" id="btnSound" aria-label="音">🔊</button>
+    <button class="icon-btn" id="btnMenu" aria-label="メニュー">☰</button>
+  </header>
+
+  <main id="stage">
+    <canvas id="map"></canvas>
+    <div id="forecast" class="float-card"></div>
+    <div id="zoom">
+      <button data-z="in" aria-label="拡大">＋</button>
+      <button data-z="out" aria-label="縮小">－</button>
+      <button data-z="fit" aria-label="全体">⤢</button>
+    </div>
+    <div id="clock" hidden><span id="clockIcon">☀️</span><b id="clockTime">00:00</b></div>
+    <div id="pinch" hidden></div>
+    <div id="banner" hidden></div>
+    <div id="toast"></div>
+  </main>
+
+  <section id="dock">
+    <!-- 建設フェーズ -->
+    <div id="buildDock">
+      <div id="info"></div>
+      <div class="dock-row">
+        <div id="palette"></div>
+        <button id="next" class="big-btn">▶ 夏の一日へ</button>
+      </div>
+    </div>
+    <!-- 1日のフェーズ（柱1：その場で操作できる） -->
+    <div id="dayDock" hidden>
+      <div class="live">
+        <canvas id="liveChart"></canvas>
+        <div class="live-side">
+          <div class="soc" id="socBox" hidden><span>🔋</span><div class="socbar"><i id="socFill"></i></div></div>
+          <div class="speed">
+            <button data-speed="1" class="on">×1</button>
+            <button data-speed="2.5">×2</button>
+            <button data-speed="skip">⏭</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="act" id="actSave"><i>📢</i><span><b>節電おねがい</b><small>3時間 使う量-15%</small></span><em id="cntSave">2</em></button>
+        <button class="act" id="actBoost"><i>🔥</i><span><b>火力フルパワー</b><small>4時間 急上昇OK</small></span><em id="cntBoost">1</em></button>
+        <button class="act" id="actHold"><i>🔒</i><span><b>蓄電池を温存</b><small>夕方までためておく</small></span><em id="stHold">OFF</em></button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="scrim" hidden><div id="modal" role="dialog" aria-modal="true"></div></div>
+<div id="title"></div>
+
+<script src="js/balance.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/render.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
