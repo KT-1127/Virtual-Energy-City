@@ -612,7 +612,7 @@ function result(o, r, np, prev, base) {
   const meta = [];   // 表を 読む 問題（tableQuiz）で 使う
   const SUB = { '🏗️ 建設費': 'はじめに 1回', '💸 燃料代': '🔥を 動かした 分。建てなくても 毎日 かかる', '🌫️ CO₂': '🔥で つくった わりあい' };
   const row = (name, f, unit, up) => { const vs = opts.map(f), mn = Math.min(...vs), mx = Math.max(...vs), top = Math.max(...vs.map(Math.abs), 1e-9);
-    const ri = meta.push({ name, vs, best: up ? mx : mn, worst: up ? mn : mx }) - 1;
+    const ri = meta.push({ name, vs, up: !!up, best: up ? mx : mn, worst: up ? mn : mx }) - 1;
     return `<tr data-r="${ri}"><th>${name}${SUB[name] ? `<small>${SUB[name]}</small>` : ''}</th>${opts.map((x, i) => { const v = vs[i], cl = mn === mx ? 'mid' : v === (up ? mx : mn) ? 'lo' : v === (up ? mn : mx) ? 'hi' : 'mid';
       return `<td class="${x.me ? 'me' : ''}" data-i="${i}"><b>${unit(v)}</b><i class="mb ${cl}"><u style="width:${Math.max(4, Math.abs(v) / top * 100)}%"></u></i></td>`; }).join('')}</tr>`; };
   const rowUp = (name, f, unit) => row(name, f, unit, true);
@@ -631,8 +631,8 @@ function result(o, r, np, prev, base) {
     <div id="stAfter" hidden>
     <h4 class="st-h4">⚖️ ほかの 選択と くらべると？</h4>
     <div class="st-tq" id="stTQ"></div>
-    <div class="st-tblw"><table class="st-tbl"><tr><th></th>${opts.map(x => `<th class="${x.me ? 'me' : ''}">${x.me ? '👉 ' : ''}${x.o.title}${scaleHTML(x.o.build)}</th>`).join('')}</tr>
-      <tr><th>けっか<small>${goalText(E)}</small></th>${opts.map(x => `<td class="${x.me ? 'me' : ''}"><b>${x.r.clear ? '⭕ クリア' : '❌'}</b><em class="${x.r.clear ? 'lo' : 'hi'}">${x.r.hours.length ? `停電 ${x.r.hours.length}時間` : x.r.clear ? '停電なし' : '燃料が 高い'}</em></td>`).join('')}</tr>
+    <div class="st-tblw"><table class="st-tbl"><tr><th></th>${opts.map((x, i) => `<th class="${x.me ? 'me' : ''}" data-i="${i}">${x.me ? '<em class="st-metag">👉 きみの 選択</em>' : ''}${x.o.title}${scaleHTML(x.o.build)}</th>`).join('')}</tr>
+      <tr class="res"><th>けっか<small>${goalText(E)}</small></th>${opts.map((x, i) => `<td class="${x.me ? 'me' : ''}" data-i="${i}"><b>${x.r.clear ? '⭕ クリア' : '❌'}</b><em class="${x.r.clear ? 'lo' : 'hi'}">${x.r.hours.length ? `停電 ${x.r.hours.length}時間` : x.r.clear ? '停電なし' : '燃料が 高い'}</em></td>`).join('')}</tr>
       ${row('🏗️ 建設費', x => x.cost, v => `🪙${v}`)}
       ${row('💸 燃料代', x => Math.round(x.r.fuel), v => `🪙${v}`)}
       ${row('🌫️ CO₂', x => x.r.co2, v => `🔥${v}%`)}
@@ -674,50 +674,70 @@ function result(o, r, np, prev, base) {
   };
 }
 /* ⚖️ くらべる表を 読む：クリアしても「なんでも よい」で 終わらせない。
-   ① きみの 選択の 弱点（いちばん わるい ものさし）→ ② その ものさしで いちばん よい 選択 → ③ その 選択の 弱点 を 表から さがす */
+   1行（1つの ものさし）ずつ「いちばん よいのは どれ？」と 聞く（その 行だけ 明るく・数字を くらべる だけで 答えられる）。
+   質問には 1位の 選択が ちがう 行を えらぶ → さいごに ものさしごとの 1位と きみの 順位を ならべ、
+   「ものさしが かわると 1位も かわる＝どの 選択にも よい ところと 弱点が ある」に 気づく */
+const TQW = { '🏗️ 建設費': ['いちばん 安い', '安い'], '💸 燃料代': ['いちばん 安い', '安い'], '🌫️ CO₂': ['いちばん 少ない', '少ない'], '🗾 自給': ['いちばん 高い', '高い'], '🛡️ 安全': ['いちばん 高い', '高い'] };
 function tableQuiz(c, opts, meta, r, done) {
   const box = c.querySelector('#stTQ'), tbl = c.querySelector('.st-tbl'), me = opts.findIndex(x => x.me);
-  const bad = (m, i) => m.best === m.worst ? 0 : (m.vs[i] - m.best) / (m.worst - m.best);   // 0＝いちばん よい・1＝いちばん わるい
-  const cell = (ri, i) => tbl.querySelector(`tr[data-r="${ri}"] td[data-i="${i}"]`);
-  const myBad = meta.map(m => bad(m, me)), top = Math.max(0, ...myBad), weakOk = ri => myBad[ri] > 0 && myBad[ri] >= Math.min(top, 0.5) - 1e-9;   // 大きく 負けている 行は どれでも 正解
-  let step = 1, miss = 0, weak = -1, tries = 0;
-  const finish = html => {
-    tbl.classList.remove('ask');
-    box.innerHTML = `<div class="st-qhead">⚖️ 表を 読もう ✅</div><div class="st-qfb ok">${html}<button class="btn go" id="stTQn">✅ わかった</button></div>`;
+  const tt = i => opts[i].o.title, nm = ri => meta[ri].name, word = ri => TQW[nm(ri)] || [meta[ri].up ? 'いちばん 高い' : 'いちばん 少ない', meta[ri].up ? '高い' : '少ない'];
+  const val = (ri, i) => { const e = tbl.querySelector(`tr[data-r="${ri}"] td[data-i="${i}"] b`); return e ? e.textContent : ''; };
+  const bestSet = ri => opts.map((x, i) => i).filter(i => meta[ri].vs[i] === meta[ri].best);
+  const rankOf = (ri, i) => 1 + opts.filter((x, j) => meta[ri].up ? meta[ri].vs[j] > meta[ri].vs[i] : meta[ri].vs[j] < meta[ri].vs[i]).length;
+  const focus = row => {
+    tbl.classList.toggle('focus', row != null); tbl.classList.remove('fcol');
+    tbl.querySelectorAll('.fx').forEach(e => e.classList.remove('fx'));
+    if (row != null) tbl.querySelectorAll(`tr[data-r="${row}"] td`).forEach(e => e.classList.add('fx'));
+  };
+  // 質問に する 行：差が ある 行の うち、1位の 選択が ほかの 行と ちがう ものを 優先（2〜3問）
+  const cand = meta.map((m, ri) => ri).filter(ri => meta[ri].best !== meta[ri].worst), pick = [];
+  cand.forEach(ri => { const k = bestSet(ri).join(); if (pick.length < 3 && !pick.some(p => bestSet(p).join() === k)) pick.push(ri); });
+  cand.forEach(ri => { if (pick.length < 2 && !pick.includes(ri)) pick.push(ri); });
+  pick.sort((x, y) => x - y);
+  let tries = 0;
+  const MINE = `<div class="st-tqme">👉 きみが えらんだ のは <b>${tt(me)}</b></div>`;   // 自分の 選択を わすれないように いつも 上に
+  const HOW = `<div class="st-tqhow"><b>📋 表の 見かた</b><span>横の 行＝くらべる ポイント（${meta.map(m => m.name.replace(/^\S+\s/, '')).join('・')}）</span><span>たての 列＝選択</span></div>`;
+  const finish = () => {
+    focus(null);
+    const rows = meta.map((m, ri) => ri).filter(ri => meta[ri].best !== meta[ri].worst);
+    const winners = new Set(rows.map(ri => bestSet(ri).join()));
+    const lose = rows.filter(ri => rankOf(ri, me) > 1);
+    const fail = opts.map((x, i) => i).filter(i => !opts[i].r.clear);
+    const tbl2 = `<table class="st-tqsumt"><tr><th>くらべる ポイント</th><th>1位</th><th>👉 きみ（${tt(me)}）</th></tr>${rows.map(ri => { const k = rankOf(ri, me);
+      return `<tr><td>${nm(ri)}</td><td>${bestSet(ri).map(tt).join('・')}<small>${val(ri, bestSet(ri)[0])}</small></td><td class="${k === 1 ? 'ok' : 'ng'}">${k}位<small>${val(ri, me)}</small></td></tr>`; }).join('')}</table>`;
+    const point = winners.size > 1 ? `<p>👀 <b>くらべる ポイントが かわると、1位の 選択も かわる</b>。</p>` : `<p>👀 この 表では「${bestSet(rows[0]).map(tt).join('・')}」が どの ポイントでも 1位。でも 表に ない もの（夜・天気・土地）は どうかな？</p>`;
+    const mine = lose.length ? `<p>きみの 選択は <b class="ng">${lose.map(nm).join('・')}</b>で 1位に なれなかった（ここが 弱点）。</p>` : `<p>きみの 選択は この 表では どれも 1位！</p>`;
+    const failT = fail.length ? `<p class="st-tqfail">❌ ${fail.map(i => `「${tt(i)}」`).join('')}は ${fail.some(i => opts[i].r.hours.length) ? '停電した' : 'クリアできなかった'}。数が よくても、停電したら 町は こまる。</p>` : '';
+    const tipW = lose.some(ri => nm(ri) === '💸 燃料代') ? `<small>💡 ${opts[me].cost ? '' : '何も 建てなくても、'}今 ある 🔥が 動くかぎり 燃料代は 毎日 かかる（建設費は はじめに 1回だけ）。</small>` : '';
+    box.innerHTML = `<div class="st-qhead">⚖️ 表を 読もう ✅</div>${MINE}<div class="st-qfb ok st-tqsum"><b class="st-tqh">📝 わかったこと</b>${tbl2}${point}${mine}${failT}
+      <p class="key">⚖️ <b>どの 選択にも よい ところと 弱点が ある</b>。何を 大事に するかで、えらぶ 答えが かわる。</p>${tipW}<button class="btn go" id="stTQn">✅ わかった</button></div>`;
     box.querySelector('#stTQn').onclick = () => { sfx('tap'); box.querySelector('.st-qfb').classList.add('done'); box.querySelector('#stTQn').remove(); done(); };
-    st.tq = { weak: weak >= 0 ? meta[weak].name.replace(/^\S+\s/, '') : '', miss: tries };
+    const myWorst = lose.slice().sort((x, y) => rankOf(y, me) - rankOf(x, me))[0];
+    st.tq = { weak: myWorst != null ? nm(myWorst).replace(/^\S+\s/, '') : '', miss: tries };
     EC.Log.add({ t: 'read', where: 'story', ok: tries === 0 });
   };
-  if (top <= 0) return finish(r.clear ? 'きみの 選択は この 表では <b>どの ものさしも いちばん よい</b>！ でも 表に ない もの（土地・町の 人の 気持ち）は どうかな？'
-    : 'この 表の 数は よい。でも <b class="ng">停電</b>した。いちばん 大事な ところで 足りなかった…');
-  const ask = () => {
-    tbl.classList.add('ask'); miss = 0;
-    box.innerHTML = `<div class="st-qhead">⚖️ 表を 読もう <span>${step} / 2</span></div><div class="st-qask">${step === 1
-      ? `${r.clear ? '🎉 クリア！ でも <b>かんぺき</b>かな？<br>' : ''}👉 きみの 選択が <b class="ng">ほかより 負けている</b> ものさしは？ 👉の 列で タップ！`
-      : `<b>${meta[weak].name}</b>で いちばん よかった 選択は？ その マスを タップ！`}</div><div class="st-qfb" id="stTQfb"></div>`;
+  if (!pick.length) return finish();
+  const ask = n => {
+    const ri = pick[n], ok = bestSet(ri); let miss = 0;
+    focus(ri);
+    box.innerHTML = `<div class="st-qhead">⚖️ 表を 読もう <span>${n + 1} / ${pick.length}</span></div>${MINE}${HOW}
+      <div class="st-qask">${n === 0 ? `${r.clear ? '🎉 クリア！ でも ' : ''}ほかの 選択と、ポイント ごとに くらべて みよう。<br>` : ''}👀 明るい 行を 見て：<b>${nm(ri)}</b>が <b>${word(ri)[0]}</b>のは どれ？</div>
+      <div class="st-qopts st-tqo">${opts.map((x, i) => `<button class="btn" data-o="${i}"><span>${x.me ? '👉 ' : ''}${x.o.title}</span></button>`).join('')}</div><div class="st-qfb" id="stTQfb"></div>`;
+    box.querySelectorAll('[data-o]').forEach(bt => bt.onclick = () => {
+      const i = +bt.dataset.o, fb = box.querySelector('#stTQfb');
+      if (!ok.includes(i)) {
+        sfx('bad'); miss++; tries++; bt.classList.add('no'); fb.className = 'st-qfb ng';
+        fb.innerHTML = `🤔「${tt(i)}」の ${nm(ri)}は <b>${val(ri, i)}</b>。もっと ${word(ri)[1]} 選択が あるよ`;
+        box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+        if (miss >= 2) ok.forEach(k => { const b2 = box.querySelector(`[data-o="${k}"]`); b2 && b2.classList.add('hint'); });
+        return;
+      }
+      sfx('right');
+      if (n + 1 < pick.length) return ask(n + 1);
+      finish();
+    });
   };
-  const wrong = msg => { sfx('bad'); miss++; tries++; const fb = box.querySelector('#stTQfb'); fb.className = 'st-qfb ng'; fb.innerHTML = '🤔 ' + msg; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
-    if (miss >= 2) (step === 1 ? meta.map((m, ri) => weakOk(ri) ? cell(ri, me) : null) : opts.map((x, i) => meta[weak].vs[i] === meta[weak].best ? cell(weak, i) : null)).forEach(e => e && e.classList.add('tq-hint')); };
-  tbl.onclick = e => {
-    const td = e.target.closest('td[data-i]'), tr = td && td.closest('tr[data-r]');
-    if (!td || !tr || !tbl.classList.contains('ask')) return;
-    const i = +td.dataset.i, ri = +tr.dataset.r, m = meta[ri];
-    tbl.querySelectorAll('.tq-hint').forEach(x => x.classList.remove('tq-hint'));
-    if (step === 1) {
-      if (i !== me) return wrong('まずは <b>👉 きみの 列</b>の 中から さがそう');
-      if (!weakOk(ri)) return wrong(myBad[ri] > 0 ? `${m.name}は すこしだけ 負けている。もっと <b class="ng">大きく 負けている</b> ものさしは？` : `${m.name}は きみが いちばん よい！ ほかより 負けている ものさしは？`);
-      sfx('right'); weak = ri; td.classList.add('tq-me'); step = 2; return ask();
-    }
-    if (ri !== weak) return wrong(`<b>${meta[weak].name}</b>の 行の 中から さがそう`);
-    if (m.vs[i] !== m.best) return wrong(`もっと よい 選択が あるよ（<b class="ok">緑の バー</b>）`);
-    sfx('right'); td.classList.add('tq-x');
-    const x = opts[i], xb = meta.map(mm => bad(mm, i)), xt = Math.max(0, ...xb), xw = xt > 0 ? meta.map((mm, k) => k).filter(k => xb[k] >= xt - 1e-9) : [];
-    xw.forEach(k => cell(k, i).classList.add('tq-xw'));
-    const but = !x.r.clear ? `でも <b class="ng">${x.r.hours.length ? '停電した' : '燃料代が 高い まま'}</b>。` : xw.length ? `でも <b class="ng">${xw.map(k => meta[k].name).join('・')}</b>が わるい。` : 'この 表では こちらの ほうが よさそう。次は くらべて えらぼう。';
-    const tipW = meta[weak].name === '💸 燃料代' ? `<small>💡 ${opts[me].cost ? '' : '何も 建てなくても、'}今 ある 🔥が 動くかぎり 燃料代は 毎日 かかる（建設費は はじめに 1回だけ）。</small>` : '';
-    finish(`そう！ <b>${x.o.title}</b>は ${m.name}が いちばん よい。${but}<br>⚖️ <b>どの 選択にも よい ところと 弱点が ある</b>。何を 大事に するかで 答えが かわる！${tipW}`);
-  };
-  ask();
+  ask(0);
 }
 // あまった 電気の 使いみち（🔋だけが 答えでは ない。どれにも 弱点が ある）
 const WAYS = [['🔋', 'ためる', '夜に 使える', '高い・数時間分だけ・材料は 輸入・火事に 注意', '家や 発電所の 蓄電池、揚水発電'],

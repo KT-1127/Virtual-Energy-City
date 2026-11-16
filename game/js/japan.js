@@ -221,6 +221,11 @@ const MODES = {
   p4: { icon: '📘', name: 'シナリオ 第4部「日本の 大臣へ」', desc: '', hidden: true, chapters: [
     { id: 'p4', title: '町長の 公約を 日本でも 守れる？', era: '2040年度', lim: LIM.y2040, show: ['co2', 'cost', 'stab', 'self', 'safe'], goals: [], intro: [], quiz: [],
       hint: '🔥を 少し へらし、その 分を ⚛️💧💨♨️☀️に。雨と 猛暑の 日の 夕方を 見ながら。' }] },
+  // 🎓 チュートリアル（モード選択の ⓪）：画面の 見かた・目標・ボタンを 1つずつ 指で さして 説明する（tutSteps）
+  tut: { icon: '🎓', name: 'チュートリアル', desc: '画面の 見かた・目標・ボタンを 1つずつ', hidden: true, chapters: [
+    { id: 't0', title: '大臣の しごとを おぼえよう', era: 'チュートリアル', lim: LIM.free, goals: [{ m: 'renew', op: '>=', v: 30 }], show: ['co2', 'cost', 'stab', 'renew'], intro: [], quiz: [],
+      hint: '🔥を 少し へらして、💧☀️💨♨️（再エネ）に 入れよう。☀️だけを ふやしすぎると 停電する 日が 出るよ。',
+      learn: () => '画面の 見かたは これで OK！ つぎは ①はじめての ミッションで、ものさしを 体験しよう。' }] },
   free: { icon: '🧪', name: 'フリー', desc: '上限の 中で 自由に 組み合わせて、いつでも 宣言できる', chapters: [
     { id: 'free', title: '自由に 組み合わせよう', era: 'フリー', lim: LIM.free, goals: [], show: ['co2', 'cost', 'stab', 'self', 'safe', 'sust', 'renew'],
       intro: ['上限の 中で 自由に 組み合わせて、日本の 1日を ためしてみよう。', 'できたら「宣言する」で きみの 考えを まとめよう。'], hint: '', quiz: [] }
@@ -372,9 +377,10 @@ function open(back, o) {
   try { build3D(); } catch (e) { R3 = null; }
   EC.Audio && EC.Audio.setMood && EC.Audio.setMood('day');
   st = { screen: 'menu' };
-  if (opts.mode) startMode(opts.mode); else showMenu();
+  if (opts.mode) startMode(opts.mode); else if (!store().tutDone) tutAsk(); else showMenu();
 }
 function close() {
+  tut.on = false; cancelAnimationFrame(tut.raf); tut.el = null;
   if (R3) { cancelAnimationFrame(R3.raf); R3.ro.disconnect(); R3.renderer.dispose(); }
   R3 = null; run = null; root.remove(); root = null;
   if (onBack) onBack();
@@ -404,8 +410,8 @@ function showMenu() {
   const unlocked = store().expert || (sv.adv || 0) >= MODES.adv.chapters.length;
   const c = modal(`<div class="jp-hero"><small>あなたは</small><b>⚡ エネルギー大臣 ⚡</b><span>日本の 電気を どう つくる？ 6つの 電源の わりあいを 決めよう</span><button class="jp-globe" title="？">🌏</button></div>`
     + secretary(['大臣、ようこそ！ 秘書の チャッピーです。', 'スライダーで わりあいを 決めると、3Dの 日本が 変わります。けむり＝CO₂、🚢＝輸入燃料 ですよ！'], 'happy')
-    + `<p class="jp-order">👉 <b>①から 順番に</b> すすむと わかりやすいよ。<span>★が 多いほど むずかしい</span></p>`
-    + `<div class="jp-modes">${card('mission')}<button class="jp-mode story" data-k="story"><em class="no">${ORDER.story[0]}</em><i>📖</i><b>ストーリー</b><small>3つの ルートから 大臣の 道を えらぶ → 2050年へ</small>${diff(ORDER.story[1])}<span class="jp-prog ${nStory >= 3 ? 'done' : ''}">ルート ${ROUTES.map(r => MODES[r].icon + ((sv[r] || 0) >= MODES[r].chapters.length ? '✅' : '')).join(' ')}</span></button>${card('real')}${card('adv')}${unlocked ? card('expert') : `<button class="jp-mode lock" data-k="lock"><em class="no">${ORDER.expert[0]}</em><i>🔒</i><b>？？？</b><small>④アドバンスを ぜんぶ クリアすると あらわれる…（どこかの 🌏にも ひみつが？）</small>${diff(ORDER.expert[1])}</button>`}<button class="jp-mode free" data-k="free"><em class="no any">いつでも</em><i>${MODES.free.icon}</i><b>${MODES.free.name}</b><small>${MODES.free.desc}</small><span class="jp-prog">目標なし・じっけん用</span></button></div>`
+    + `<p class="jp-order">👉 <b>⓪チュートリアル → ①から 順番に</b> すすむと わかりやすいよ。<span>★が 多いほど むずかしい</span></p>`
+    + `<div class="jp-modes"><button class="jp-mode tut" data-k="tut"><em class="no">⓪</em><i>🎓</i><b>チュートリアル</b><small>画面の 見かた・目標・ボタンを 1つずつ（約5分）</small><span class="jp-prog ${store().tutDone ? 'done' : 'first'}">${store().tutDone ? '✅ おわった' : '👆 はじめての 人は ここから'}</span></button>${card('mission')}<button class="jp-mode story" data-k="story"><em class="no">${ORDER.story[0]}</em><i>📖</i><b>ストーリー</b><small>3つの ルートから 大臣の 道を えらぶ → 2050年へ</small>${diff(ORDER.story[1])}<span class="jp-prog ${nStory >= 3 ? 'done' : ''}">ルート ${ROUTES.map(r => MODES[r].icon + ((sv[r] || 0) >= MODES[r].chapters.length ? '✅' : '')).join(' ')}</span></button>${card('real')}${card('adv')}${unlocked ? card('expert') : `<button class="jp-mode lock" data-k="lock"><em class="no">${ORDER.expert[0]}</em><i>🔒</i><b>？？？</b><small>④アドバンスを ぜんぶ クリアすると あらわれる…（どこかの 🌏にも ひみつが？）</small>${diff(ORDER.expert[1])}</button>`}<button class="jp-mode free" data-k="free"><em class="no any">いつでも</em><i>${MODES.free.icon}</i><b>${MODES.free.name}</b><small>${MODES.free.desc}</small><span class="jp-prog">目標なし・じっけん用</span></button></div>`
     + `<p class="jp-note">数値は 国の 統計・審議会資料を もとに ゲーム用に 丸めた めやすです（資源エネルギー庁 2024年度確報・第7次エネルギー基本計画・電力中央研究所 ほか）。</p>`, 'menu');
   c.querySelectorAll('.jp-mode').forEach(b => b.onclick = () => { if (b.dataset.k === 'lock') { sfx('bad'); return; } sfx('pick'); b.dataset.k === 'story' ? showRoutes() : startMode(b.dataset.k); });
   c.querySelector('.jp-globe').onclick = () => { if (unlocked) { sfx('tap'); return; } storeSet({ expert: true }); sfx('clearBig'); showMenu(); };
@@ -509,9 +515,11 @@ function chapter() { return st.M.chapters[st.ci]; }
 function startChapter() {
   const ch = chapter();
   st.screen = 'play'; st.tries = []; st.showRef = false; st.whyAsked = false; locks = {}; run = null;
+  root.querySelector('#jpBottom').hidden = true; root.classList.remove('playing');   // まえの チャプターの 1日の グラフを けす
   mix = startMix(ch);
   if (R3) R3.spin = false;
   hideModal(); buildHUD(); update(true);
+  if (st.mode === 'tut') return tutStart();
   cutIn('ep', { no: ch.era, icon: st.M.icon, title: ch.title, goal: ch.goals.length ? ch.goals.map(gText).join('　') : '自由に ためそう', alert: false }, () => {
     const c = modal(`<div class="jp-chhead"><small>${st.M.icon} ${st.M.name}・${ch.era}</small><b>${ch.title}</b></div>` + secretary(ch.intro, 'normal')
       + (ch.goals.length ? `<div class="jp-goalbox"><b>🎯 目標</b>${ch.goals.map(gl => `<span>${gText(gl)}</span>`).join('')}</div>` : '')
@@ -530,6 +538,173 @@ function cutIn(kind, o, then) {
   else if (kind === 'fail') { el.innerHTML = `<div class="fx-bulb">💡</div><div class="fx-big">${o.big}</div><div class="fx-sub">${o.sub}</div>`; sfx('failBig'); }
   let ready = false; setTimeout(() => { ready = true; el.insertAdjacentHTML('beforeend', '<div class="fx-next">👆 タップで すすむ</div>'); }, 1400);
   el.onclick = () => { if (ready) end(); };
+}
+
+/* ---------- 🏆 ものさしの 説明と ランキング（右上の アイコン・上の 目標チップから ひらく） ---------- */
+const STAR = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+const RANK = {
+  co2: { v: s => s.co2, low: true, f: v => v + 'g', what: '1kWh つくる ときの CO₂（つくる・運ぶ・こわすまで ふくむ）', src: '電力中央研究所（🔥は 2024年度の 石炭・LNG・石油の わりあいで 平均）' },
+  cost: { v: s => s.cost, low: true, f: v => v.toFixed(1) + '円', what: '1kWh つくるのに かかる お金', src: '発電コスト検証 2025年（2023年の 値）' },
+  capf: { v: s => s.capf, f: v => v + '%', what: '1年じゅう 全力の ときに くらべて どれだけ 発電したか', src: '発電コスト検証 2025年' },
+  self: { v: s => s.dom, f: v => v ? '◯ 国産（⚛️は 準国産）' : '✕ 燃料を 輸入', what: '燃料を 輸入に たよるか', bar: false },
+  renew: { v: s => ['hydro', 'solar', 'wind', 'geo'].includes(s.k) ? 1 : 0, f: v => v ? '◯ 再エネ' : '✕ 再エネ では ない', what: '再生可能エネルギーか', bar: false },
+  // 停電しないか：1つの 電源では 決まらないので 順位は つけず、天気・時間に 左右されるかで 2つに 分ける
+  // ◎○△✕ は どの 天気・時間の ものか わかるように、1つずつ アイコンと 名前を 上に つける
+  stab: { v: s => WX[s.k].d.every(x => x === '◎') ? 1 : 0, f: (v, s) => `<span class="rk-wx">${WXH.map(([ic, nm], j) => `<i class="${WX[s.k].d[j] === '✕' ? 'x' : WX[s.k].d[j] === '△' ? 'm' : ''}"><small>${ic}${nm}</small>${WX[s.k].d[j]}</i>`).join('')}</span>`,
+    what: '天気・時間に 左右されないか', bar: false,
+    key: '◎ いつも 出せる　○ 出せるが 天気で かわる　△ 少ししか 出せない　✕ 出せない',
+    note: '⚡ 停電しないかは 1つの 電源では 決まらない。夕方や 夜に すぐ 出せる 電源と、ためる 設備が 足りるか（組み合わせ）で 決まる。' }
+};
+['safe', 'sust', 'init', 'maint', 'waste', 'social'].forEach(k => { RANK[k] = { v: s => s[k], f: v => STAR(v), what: '1〜5の 点数（高いほど よい）', src: 'ゲーム（本家「大作戦」）の 考え方。人に よって 考えが ちがう', bar: false }; });
+function rankHTML(mk) {
+  const R = RANK[mk]; if (!R) return '';
+  const rows = SRC.map(s => ({ s, v: R.v(s) })).sort((a, b) => R.low ? a.v - b.v : b.v - a.v), mx = Math.max(...rows.map(x => x.v)) || 1;
+  let no = 0, prev = null;
+  rows.forEach((x, i) => { if (x.v !== prev) no = i + 1; x.no = no; prev = x.v; });
+  return `<div class="jp-rk"><h4>🏆 6つの 電源の ランキング <small>${R.low ? '⬇ 少ない ほど よい' : '⬆ よい 順'}・${R.what}</small></h4>
+    ${rows.map(x => `<div class="rk-row ${x.no === 1 ? 'top' : ''}"><b class="rk-no">${x.no}位</b><img src="${EC.charaIcon(x.s.k, 'happy')}" alt=""><span class="rk-nm">${x.s.icon} ${x.s.name}</span>${R.bar === false ? '<span class="rk-sp"></span>' : `<p class="rk-bar"><i style="width:${Math.max(2, x.v / mx * 100)}%;background:${COL(x.s.k)}"></i></p>`}<em class="rk-v">${R.f(x.v, x.s)}</em><small class="rk-me">${st && st.screen === 'play' ? `いま ${mix[x.s.k]}%` : ''}</small></div>`).join('')}
+    ${R.key ? `<p class="rk-key">${R.key}</p>` : ''}${R.note ? `<p class="rk-note">${R.note}</p>` : ''}${R.src ? `<p class="rk-src">出典：${R.src}</p>` : ''}</div>`;
+}
+function metModal(mk) {
+  const c = modal(`<h3>${MET[mk].icon} ${MET[mk].name}とは？</h3><p class="jp-def">${MET[mk].def}</p>${rankHTML(mk)}<button class="btn go" id="jpOK">わかった</button>`);
+  c.querySelector('#jpOK').onclick = () => { sfx('tap'); hideModal(); };
+}
+
+/* ---------- 🎓 チュートリアル：画面の 一部だけ 明るく して、指で さしながら 1つずつ 説明する ----------
+   at：明るく する 場所（セレクタ。配列なら まとめて）　next：「つぎへ」ボタン　ready：つぎへを おせる 条件
+   wait：その 操作を したら 自動で つぎへ　hide：案内を かくして 待つ（カットインを タップで すすめる とき） */
+const tut = { on: false, i: 0, steps: null, el: null, raf: 0, t0: 0, solar0: 0 };
+const Q = q => root && root.querySelector(q);
+const openModal = q => !!Q(`#jpModal:not([hidden]) ${q}`);
+function tutSteps() {
+  return [
+    { text: '大臣、チュートリアルへ ようこそ！ 秘書の チャッピーです。<br>ここでは、日本の 電気を 6つの 電源で どう つくるか（<b>わりあい</b>）を 決めます。<b>画面の 見かたと ボタン</b>を、1つずつ 説明しますね。', next: true },
+    { at: '#jpGoals', text: '🎯 上に ならんだ チップが <b>目標</b>（クリアの 条件）です。⬜ が ✅ に かわったら 達成。<b>ぜんぶ ✅ に して「決定」</b>すると クリア！<br>チップを タップすると、くわしい 説明も 見られます。', next: true },
+    { at: '#jpLeft', text: '左は <b>電源の わりあい</b>。円グラフが いまの わりあいで、合計は いつも <b>100%</b>。<br>それぞれに <b>上限</b>（国の めやす）が あって、それより 多くは できません。', next: true },
+    { at: '.jp-src[data-k=thermal] .ic', text: 'キャラを タップすると、その 電源の <b>📖 特徴カード</b>（ステータス）が 見られます。<br>👆 <b>🔥火力の キャラ</b>を タップしてみよう！', wait: () => openModal('.jp-srchead') },
+    { at: '#jpModal .jp-card', text: 'これが 特徴カード。<b>◎長所・△短所</b>、<b>天気と 時間で どう かわるか</b>、<b>6つの 電源との くらべ</b>（CO₂・コスト）、<b>上限の 理由</b>が わかります。<br>◀ ▶ で ほかの 電源も 見られます。', next: true },
+    { at: '#jpModal #jpOK', text: '見おわったら 👆「<b>とじる</b>」', wait: () => Q('#jpModal').hidden },
+    { at: '.jp-src[data-k=thermal] .pm[data-d="-1"]', text: 'わりあいは <b>＋ − ボタン</b> か <b>スライダー</b>で 変えます。<br>まず 🔥火力を へらして「<b>のこり</b>」を つくろう。👆 <b>−</b> を <b>5回</b> おしてね', wait: () => 100 - total(mix) >= 5 },
+    { at: '#jpFree', text: '「<b>のこり</b>」が できました！ のこりが ある あいだは、決定も ためしも できません。', next: true },
+    { at: '.jp-src[data-k=solar] .pm[data-d="1"]', text: 'のこりを ☀️<b>太陽光</b>に 入れよう。👆 <b>＋</b> を おして、<b>合計 100%</b> に してね', wait: () => total(mix) === 100 && mix.solar > tut.solar0 },
+    { at: '#jpMets', text: '右上は <b>ものさし</b>。わりあいを 変えると 数字と <b>▲▼</b>（どれだけ 変わったか）が 動きます。<br><b>｜の 線</b>が 目標で、<b class="g">緑</b>＝目標クリア、<b class="r">赤</b>＝まだ。', next: true },
+    { at: '.jp-met[data-m=co2] .q', text: 'ものさしの <b>アイコン</b>を タップすると、くわしい 説明と <b>6つの 電源の ランキング</b>が 見られます。<br>👆 <b>🌏</b> を タップ！', wait: () => openModal('.jp-rk') },
+    { at: '#jpModal .jp-rk', text: 'CO₂を <b>いちばん 出さない 電源から、いちばん 出す 電源まで</b>、数字で ならんでいます。「いま ○%」は きみの わりあい。<br>どの 電源を ふやすか・へらすか 考える ヒントに しよう。', next: true },
+    { at: '#jpModal #jpOK', text: '👆「<b>わかった</b>」で とじよう', wait: () => Q('#jpModal').hidden },
+    { at: '#jpTip', text: 'ここは <b>チャッピーの ヒント</b>。何を すれば よいか 迷ったら、ここを 見てね。', next: true },
+    { at: '.jp-days', hand: '.jp-days button[data-d=cloud]', text: '<b>4つの日</b>（晴れ・雨・風なし・猛暑）で、1時間ごとに 停電しないか ためした 結果です。<b>⭕＝停電なし、⚡＝停電</b>。<br>👆 <b>🌧️雨</b> を タップすると、その日の 1日が 流れます', wait: () => !!run },
+    { at: '#jpBottom', text: '下に <b>1日の グラフ</b>。色は 電源、<b>黒い 線</b>が 使う 量、<b>黒い ブロック</b>が 停電、灰色は あまって すてた 電気。⏩ で とばせます。', next: true, ready: () => !run },
+    { enter: () => { tut.need = Math.max(0, 30 - metrics(norm(mix)).renew - (100 - total(mix))); }, at: ['.jp-src[data-k=thermal] .pct', '.jp-src[data-k=thermal] .btns'], hand: '.jp-src[data-k=thermal] .pm[data-d="-1"]',
+      text: () => `さあ、目標を ぜんぶ ✅ に しよう！ いま 再エネは <b>${metrics(norm(mix)).renew}%</b>。目標の 30%まで あと <b>${tut.need}</b>。<br>まず 🔥火力を へらして「のこり」を つくろう。👆 <b>−</b> を <b>${tut.need}回</b> おしてね`, wait: () => 100 - total(mix) >= tut.need },
+    { at: ['.jp-src[data-k=solar] .pct', '.jp-src[data-k=solar] .btns'], hand: '.jp-src[data-k=solar] .pm[data-d="1"]',
+      text: 'のこりを ☀️<b>太陽光</b>（再エネ）に 入れよう。👆 <b>＋</b> を おして <b>合計 100%</b> に。<br>（💧水力・💨風力・♨️地熱バイオに 入れても 再エネが ふえるよ）', wait: () => total(mix) === 100 && chapter().goals.every(gl => gOk(gl, metrics(mix), mix)) },
+    { at: '#jpGo', text: '目標が ぜんぶ ✅！ 👆「<b>✅ この わりあいで 決定！</b>」を おそう', wait: () => st.tries.length > 0 },
+    { hide: true, wait: () => openModal('.jp-rank') },
+    { at: '#jpModal .jp-rank', text: '<b>結果発表</b>！ ランク（S〜C）と、目標を 達成できたか。<br>ここからは、結果の <b>見る 順番</b>を 案内します（ほかの チャプターでも 同じ）。', next: true },
+    { at: '#jpModal .jp-gt', text: '① <b>目標</b> 1つずつの 結果。✅＝達成、❌＝まだ。数字と 目標の 線も 見よう。', next: true },
+    { at: '#jpModal .jp-days4', text: '② <b>4つの日</b>の 結果。⚡ が あると、その日の グラフと「どうすれば 停電しない？」が 出ます。', next: true },
+    { at: '#jpModal .jp-sbs', text: '③ きみの <b>わりあい</b>を、2024年の 日本と くらべる 帯グラフ。', next: true },
+    { at: ['#jpModal #jpRQ', '#jpModal .jp-c2'], hand: () => { const go = Q('#jpModal #jpRQgo'); if (go && !go.disabled) return go; const row = [...root.querySelectorAll('#jpModal .jp-c2 [data-mk]')].find(r => !r.querySelector('.ch button.on')); return row ? { el: row, side: 'left' } : go; },
+      text: '④ ここが 大事！ 2024年と くらべて、ものさしが <b>よく</b> なったか <b>わるく</b> なったか、<b>1行ずつ 自分で 判定</b>します（⬇＝少ない ほど よい、⬆＝多い ほど よい に 注意）。<br>👆 指の 行の「よく・おなじ・わるく」を えらぼう。<b>ぜんぶ えらぶと「たしかめる」が 緑</b>に なるので、おしてね', wait: () => /\b(ok|ng)\b/.test((Q('#jpModal #jpRQ') || {}).className || '') },
+    { at: '#jpModal #jpRQ', text: '答え あわせ。わるく なった ものさしは「<b>どれだけ</b>」下がったかも 見よう。<b>1つを よく すると、ほかが 下がる</b> ことも あります。', next: true },
+    { at: '#jpModal #jpNext', text: '⑤ 読みおわったら、いちばん 下の <b>緑の ボタン</b>で 進みます（ふだんは「▶ つぎの チャプターへ」）。<br>もう一度 ためしたい ときは「🔄 もう一度」。👆 おしてみよう', wait: () => !openModal('.jp-rank') }
+  ];
+}
+function tutAsk() {
+  st = { screen: 'menu' };
+  const c = modal(`<div class="jp-hero"><small>はじめての 大臣へ</small><b>🎓 チュートリアル</b><span>画面の 見かた・目標・ボタン・結果の 見かたを、1つずつ 指で さして 説明します（約5分）</span></div>`
+    + secretary(['大臣、はじめまして！ 秘書の チャッピーです。', 'まずは チュートリアルで、どこを 見て、どの ボタンを おせば よいかを おぼえましょう！'], 'happy')
+    + `<div class="row2"><button class="btn" id="jpTN">モード選択へ</button><button class="btn go" id="jpTY">🎓 チュートリアルから はじめる</button></div>`, 'menu');
+  c.querySelector('#jpTY').onclick = () => { sfx('pick'); startMode('tut'); };
+  c.querySelector('#jpTN').onclick = () => { sfx('tap'); showMenu(); };
+}
+function tutStart() {
+  if (!tut.el) {
+    tut.el = document.createElement('div'); tut.el.className = 'jp-tut';
+    tut.el.innerHTML = `<i class="tt-b"></i><i class="tt-b"></i><i class="tt-b"></i><i class="tt-b"></i><div class="tt-hole"></div><div class="tt-hand">👆</div>
+      <div class="tt-box"><div class="tt-cp">${g.Chappy2D ? Chappy2D.svg('happy', '') : '🤖'}</div><div class="tt-say"></div>
+        <button class="tt-quit" id="ttSkip" title="チュートリアルを やめる">✕ やめる</button>
+        <div class="tt-row"><small class="tt-no"></small><span class="tt-do">👆 光っている ところを タップ</span><button class="btn small go" id="ttNext">つぎへ ▶</button></div></div>
+      <div class="tt-ask" hidden><div><b>チュートリアルを やめますか？</b><p>最後まで 見ると、どこを 見て、どの ボタンを おせば よいか わかります。</p>
+        <button class="btn go" id="ttGoOn">▶ つづける</button><button class="tt-quit2" id="ttQuit">やめる</button></div></div>`;
+    root.appendChild(tut.el);
+    // 暗い ところで ホイールを 回しても、開いている 窓は スクロールできる
+    tut.el.querySelectorAll('.tt-b').forEach(b => b.addEventListener('wheel', e => { const sc = Q('#jpModal:not([hidden]) .jp-card'); if (sc) sc.scrollTop += e.deltaY; }, { passive: true }));
+    tut.el.querySelector('#ttNext').onclick = () => { const s = tut.steps[tut.i]; if (s && s.ready && !s.ready()) return; sfx('tap'); tutGo(tut.i + 1); };
+    const ask = tut.el.querySelector('.tt-ask');
+    tut.el.querySelector('#ttSkip').onclick = () => { sfx('tap'); ask.hidden = false; };
+    tut.el.querySelector('#ttGoOn').onclick = () => { sfx('tap'); ask.hidden = true; };
+    tut.el.querySelector('#ttQuit').onclick = () => { sfx('tap'); tutEnd(); };
+  }
+  tut.on = true; tut.steps = tutSteps(); tut.solar0 = mix.solar;
+  tutGo(0); cancelAnimationFrame(tut.raf); tut.raf = requestAnimationFrame(tutFrame);
+}
+function tutEnd() {
+  tut.on = false; cancelAnimationFrame(tut.raf); storeSet({ tutDone: true });
+  if (tut.el) { tut.el.remove(); tut.el = null; }
+}
+const tutTargets = at => (Array.isArray(at) ? at : at ? [at] : []).map(q => typeof q === 'string' ? Q(q) : q).filter(Boolean);   // セレクタ か 要素
+function tutRect(at) {
+  const rs = tutTargets(at).map(e => e.getBoundingClientRect()).filter(r => r.width && r.height);
+  if (!rs.length) return null;
+  return { l: Math.min(...rs.map(r => r.left)), t: Math.min(...rs.map(r => r.top)), r: Math.max(...rs.map(r => r.right)), b: Math.max(...rs.map(r => r.bottom)) };
+}
+function tutGo(i) {
+  const s = tut.steps[i];
+  if (!s) return tutEnd();
+  tut.i = i; tut.t0 = performance.now();
+  const e = tutTargets(s.at)[0]; if (e && e.closest('.jp-card')) e.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  tut.el.classList.toggle('hide', !!s.hide);
+  if (s.enter) s.enter();
+  tut.el.querySelector('.tt-say').innerHTML = (typeof s.text === 'function' ? s.text() : s.text) || '';
+  tut.el.querySelector('.tt-no').textContent = `${tut.steps.slice(0, i + 1).filter(x => !x.hide).length} / ${tut.steps.filter(x => !x.hide).length}`;
+  tut.el.querySelector('#ttNext').hidden = !s.next;
+  tut.el.querySelector('.tt-do').hidden = !!s.next || !s.wait;   // 生徒が タップする 番は ボタンの かわりに ことばで
+}
+function tutFrame() {
+  if (!tut.on || !root || !tut.el) return;
+  const s = tut.steps[tut.i];
+  if (s.wait && performance.now() - tut.t0 > 250 && s.wait()) { sfx('right'); tutGo(tut.i + 1); }
+  else if (!s.hide) tutLayout(s);
+  tut.raf = requestAnimationFrame(tutFrame);
+}
+function tutLayout(s) {
+  const W = innerWidth, H = innerHeight, R = tutRect(s.at), pad = 6, [bt, bb, bl, br] = tut.el.querySelectorAll('.tt-b'), hole = tut.el.querySelector('.tt-hole');
+  const set = (el, l, t, w, h) => { el.style.cssText = `left:${l}px;top:${t}px;width:${Math.max(0, w)}px;height:${Math.max(0, h)}px`; };
+  let box = null;
+  if (R) {
+    const l = Math.max(0, R.l - pad), t = Math.max(0, R.t - pad), r = Math.min(W, R.r + pad), b = Math.min(H, R.b + pad);
+    set(bt, 0, 0, W, t); set(bb, 0, b, W, H - b); set(bl, 0, t, l, b - t); set(br, r, t, W - r, b - t);
+    set(hole, l, t, r - l, b - t); hole.hidden = false; box = { l, t, r, b };
+  } else { set(bt, 0, 0, W, H); [bb, bl, br].forEach(x => set(x, 0, 0, 0, 0)); hole.hidden = true; }
+  // 説明の 箱：明るい ところに かぶらない 場所へ（下 → 上 → 右 → 左 → まんなか）
+  const tb = tut.el.querySelector('.tt-box'), bw = tb.offsetWidth, bh = tb.offsetHeight, m = 12;
+  let x = (W - bw) / 2, y = (H - bh) / 2;
+  if (box) {
+    const cx = clamp((box.l + box.r) / 2 - bw / 2, m, W - bw - m), cy = clamp((box.t + box.b) / 2 - bh / 2, m, H - bh - m);
+    if (box.b + m + bh < H - m) { x = cx; y = box.b + m; } else if (box.t - m - bh > m) { x = cx; y = box.t - m - bh; }
+    else if (box.r + m + bw < W - m) { x = box.r + m; y = cy; } else if (box.l - m - bw > m) { x = box.l - m - bw; y = cy; }
+    else { x = cx; y = H - bh - m; }
+  }
+  tb.style.left = x + 'px'; tb.style.top = y + 'px';
+  // 指：おす ところ（hand が あれば そこ）
+  let hv = typeof s.hand === 'function' ? s.hand() : s.hand; const side = hv && hv.side; if (side) hv = hv.el;
+  const hand = tut.el.querySelector('.tt-hand'), HR = tutRect(hv || s.at);
+  hand.hidden = !(s.wait && HR);
+  if (!hand.hidden) {   // ふつうは 下から 👆、side:'left' は 左から 👉（行 ぜんたいを さす）
+    hand.textContent = side ? '👉' : '👆'; hand.classList.toggle('side', !!side);
+    hand.style.left = (side ? Math.max(4, HR.l - 44) : (HR.l + HR.r) / 2 - 14) + 'px'; hand.style.top = (side ? (HR.t + HR.b) / 2 - 20 : Math.min(H - 44, HR.b - 4)) + 'px';
+  }
+  const nb = tut.el.querySelector('#ttNext'); if (s.next) nb.disabled = !!(s.ready && !s.ready());
+}
+function tutFinish() {
+  tutEnd(); sfx('clearBig');
+  const c = modal(`<div class="jp-hero"><small>🎓 チュートリアル</small><b>クリア！ 準備 OK</b><span>これで 大臣の しごとが できます</span></div>`
+    + `<div class="jp-tutsum"><span>🎯 上の チップ＝目標（タップで くわしく）</span><span>📖 キャラを タップ＝特徴カード</span><span>＋ − ・スライダーで わりあい（合計100%）</span><span>📊 右上の アイコン＝説明と ランキング</span><span>🗾 4つの日を タップ＝1日の グラフ</span><span>✅ 決定 → ①目標 ②4つの日 ③わりあい ④表を 判定 ⑤緑の ボタンで 進む</span></div>`
+    + secretary(['つぎは ①はじめての ミッション。スライダーと ものさしを 体験しよう！'], 'happy')
+    + `<div class="row2"><button class="btn" id="jpTM">モード選択へ</button><button class="btn go" id="jpT1">① はじめての ミッションへ ▶</button></div>`, 'menu');
+  c.querySelector('#jpT1').onclick = () => { sfx('pick'); startMode('mission'); };
+  c.querySelector('#jpTM').onclick = () => { sfx('tap'); showMenu(); };
 }
 
 /* ---------- 画面（スライダー・ものさし） ---------- */
@@ -561,7 +736,12 @@ function buildHUD() {
     <div class="jp-dayh"><b>🗾 4つの日で 停電しない？</b><small>👆 日を タップ → その日の 1日を 見る</small></div>
     <div class="jp-days">${Object.entries(DAYS).map(([k, d]) => `<button data-d="${k}" class="${DAYS[k] === day ? 'on' : ''}" title="${d.about}">${d.icon}<small>${d.name}</small><em></em></button>`).join('')}</div>
     <button class="jp-go" id="jpGo">${ch.goals.length ? '✅ この わりあいで 決定！' : '📜 宣言する'}</button>`;
-  root.querySelectorAll('.jp-met .q').forEach(b => b.onclick = () => { const mk = b.parentNode.dataset.m; modal(`<h3>${MET[mk].icon} ${MET[mk].name}とは？</h3><p class="jp-def">${MET[mk].def}</p><button class="btn go" id="jpOK">わかった</button>`).querySelector('#jpOK').onclick = hideModal; });
+  root.querySelectorAll('.jp-met .q').forEach(b => b.onclick = () => { sfx('tap'); metModal(b.parentNode.dataset.m); });
+  root.querySelector('#jpGoals').onclick = e => {   // 目標の チップ → その ものさしの 説明と ランキング
+    const sp = e.target.closest('span[data-i]'); if (!sp) return;
+    const gl = chapter().goals[+sp.dataset.i]; sfx('tap');
+    if (gl.m) metModal(gl.m); else if (gl.days) metModal('stab'); else if (gl.src) showSource(gl.src);
+  };
   root.querySelectorAll('.jp-days button').forEach(b => b.onclick = () => { if (run || total(mix) !== 100) return; day = DAYS[b.dataset.d]; root.querySelectorAll('.jp-days button').forEach(x => x.classList.toggle('on', x === b)); startRun(); });
   root.querySelector('#jpGo').onclick = () => ch.goals.length ? decide() : declare();
   root.querySelector('#jpLegend').innerHTML = '<span>👤 キャラ1人＝5%</span><span>🌫️ けむり＝CO₂</span><span>🚢 タンカー＝輸入燃料</span><span>🖱️ ドラッグで 回す・ホイールで 近づく</span><button class="jp-cam" id="jpCam"></button>';
@@ -593,7 +773,7 @@ function update(first) {
     if (dragFrom) { const d = Math.round((v - dragFrom[mk]) * 10) / 10; const good = M.low ? d < 0 : d > 0; dl.textContent = d ? (d > 0 ? '▲' : '▼') + Math.abs(d) : ''; dl.className = 'dl ' + (d ? (good ? 'up' : 'dn') : ''); }
     else dl.textContent = '';
   });
-  root.querySelector('#jpGoals').innerHTML = ch.goals.map(gl => { const ok = !free && gOk(gl, r, mix); return `<span class="${ok ? 'ok' : ''}">${ok ? '✅' : '⬜'} ${gText(gl)}</span>`; }).join('');
+  root.querySelector('#jpGoals').innerHTML = ch.goals.map((gl, i) => { const ok = !free && gOk(gl, r, mix); return `<span class="${ok ? 'ok' : ''} ${gl.m || gl.days || gl.src ? 'tap' : ''}" data-i="${i}" title="タップで くわしく">${ok ? '✅' : '⬜'} ${gText(gl)}</span>`; }).join('');
   root.querySelector('#jpTip').innerHTML = tip(r);
   drawDonut();
   if (R3) R3.dirty = true;
@@ -693,6 +873,8 @@ function startRun() {
     <div class="jp-cleg">${SRC.map(s => `<span><i style="background:${COL(s.k)}"></i>${s.icon}</span>`).join('')}<span><i style="background:${COL('battery')}"></i>🔋ためた 電気</span><span><i class="line"></i>使う 量</span><span><i style="background:${EC.BLACK}"></i>停電</span><span><i style="background:rgba(150,160,175,.7)"></i>すてた</span></div>
     <button class="btn" id="jpSkip">⏩</button>`;
   b.querySelector('#jpSkip').onclick = () => { if (run) run.t = 18; };
+  // 3Dが 使えない 端末（R3 なし）でも 1日を すすめる（ふだんは 3Dの ループが tickRun を よぶ）
+  if (!R3) { let last = performance.now(); const step = now => { if (!run || !root) return; tickRun(Math.min(0.1, (now - last) / 1000)); last = now; if (run) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 }
 function tickRun(dt) {
   run.t = Math.min(18, run.t + dt * 2.2);
@@ -767,29 +949,30 @@ function result(ch, r, oks, rank, days) {
   const b0 = metrics(BASE), pc = (mk, v) => clamp((v - MET[mk].lo) / (MET[mk].hi - MET[mk].lo) * 100, 0, 100);
   const c = modal(`<div class="jp-rank r${rank}"><i>${rank}</i><div><b>${all ? '🎉 目標 達成！' : '😣 目標まで あと すこし'}</b><small>${st.M.icon} ${ch.era}「${ch.title}」</small></div></div>
     <div class="jp-cols"><div>
+      <p class="jp-flow">👀 見る 順番：<b>①</b>目標 → <b>②</b>4つの日 → <b>③</b>わりあい → <b>④</b>表を 判定して「たしかめる」 → <b>⑤</b>いちばん 下の 緑の ボタンで 進む</p>
       <div class="jp-verdict"><div class="${all ? 'ok' : 'ng'}"><i>🎯</i><span>ものさしの 目標</span><b>${nOk}/${ch.goals.length}</b></div><div class="${black.length ? 'ng' : 'ok'}"><i>🗾</i><span>日本の 1日（4つの 日）</span><b>${black.length ? `⚡ ${black.length}日 停電` : '⭕ 停電なし'}</b></div></div>
       <p class="jp-srule">🏅 <b>S</b> ＝ 目標を よゆうで 達成　<b>A</b> ＝ 目標を 達成${ch.goals.includes(DAYGOAL) ? '　<span>（⚡ 4つの日 停電なしも 目標）</span>' : ''}</p>
       ${black.length && ch.noS ? `<div class="jp-gap find">${ch.noS}</div>` : ''}
       ${onlyDays ? '<div class="jp-gap">🤔 ものさしは 合格。でも 1時間ごとに 見ると <b>停電</b>！ わりあいは <b>1年の 平均</b>。☀️の ない 夜や 雨の 日は、<b>すぐ 出せる 電源</b>と <b>ためた 電気</b>が 足りるかで 決まる。</div>' : ''}
-      <h4>🎯 目標</h4><div class="jp-gt">${ch.goals.map((gl, i) => `<div class="${oks[i] ? 'ok' : 'ng'}"><i>${oks[i] ? '✅' : '❌'}</i><span>${gText(gl)}</span><b>${gl.days ? `${4 - black.length}/4日` : gl.m ? MET[gl.m].fmt(r[gl.m]) : Math.round(gVal(gl, r, mix)) + '%'}</b>${gl.m && gl.min == null ? `<p class="g"><em style="width:${pc(gl.m, r[gl.m])}%"></em><u style="left:${pc(gl.m, gl.v)}%"></u></p>` : ''}</div>`).join('')}</div>
-      <h4>🧩 わりあいを くらべる</h4>
+      <h4><em class="jp-n">①</em>🎯 目標</h4><div class="jp-gt">${ch.goals.map((gl, i) => `<div class="${oks[i] ? 'ok' : 'ng'}"><i>${oks[i] ? '✅' : '❌'}</i><span>${gText(gl)}</span><b>${gl.days ? `${4 - black.length}/4日` : gl.m ? MET[gl.m].fmt(r[gl.m]) : Math.round(gVal(gl, r, mix)) + '%'}</b>${gl.m && gl.min == null ? `<p class="g"><em style="width:${pc(gl.m, r[gl.m])}%"></em><u style="left:${pc(gl.m, gl.v)}%"></u></p>` : ''}</div>`).join('')}</div>
+      <h4><em class="jp-n">③</em>🧩 わりあいを くらべる</h4>
       <div class="jp-sbs">${sbar('きみ', segOf(mix))}${all || !ch.refHide ? sbar('2024年', segOf(BASE)) : ''}${REFBAR[ch.id] ? sbar(...REFBAR[ch.id]) : ''}</div>
-      <h4>📊 2024年の 日本と くらべて</h4>
+      <h4><em class="jp-n">④</em>📊 2024年の 日本と くらべて</h4>
       <div class="jp-rq" id="jpRQ"><b>👆 2024年と くらべて、1つずつ <span class="up">よく なった</span>？ <span class="dn">わるく なった</span>？<small>⬇⬆の「よい 向き」に 注意</small></b><button class="btn small go" id="jpRQgo" disabled></button></div>
       <div class="jp-c2 ask">${show.map(mk => { const M = MET[mk], b = b0[mk], v = r[mk], better = M.low ? v < b : v > b, cl = v === b ? 'eq' : better ? 'up' : 'dn';
         return `<div data-mk="${mk}" data-cl="${cl}"><span>${M.icon} ${M.name}<small>${M.low ? '⬇ 少ない ほど よい' : '⬆ 多い ほど よい'}</small></span><p><i class="b0" style="width:${pc(mk, b)}%"></i><small>2024 ${M.fmt(b)}</small></p><p><i class="b1" style="width:${pc(mk, v)}%"></i><small>きみ <b>${M.fmt(v)}</b></small></p><em class="ch" data-t="${v === b ? 'おなじ' : better ? 'よく なった' : 'わるく なった'}"><button data-v="up">よく</button><button data-v="eq">おなじ</button><button data-v="dn">わるく</button></em></div>`; }).join('')}</div>
     </div><div>
-      <h4>🗾 日本の 1日で ためすと</h4><div class="jp-days4">${days.map(x => `<div class="${x.b ? 'ng' : 'ok'}"><i>${x.d.icon}</i><b>${x.b ? '⚡' : '⭕'}</b><span>${x.d.name}${x.b ? `<br>停電 ${x.b}時間` : ''}</span></div>`).join('')}</div>
+      <h4><em class="jp-n">②</em>🗾 日本の 1日で ためすと</h4><div class="jp-days4">${days.map(x => `<div class="${x.b ? 'ng' : 'ok'}"><i>${x.d.icon}</i><b>${x.b ? '⚡' : '⭕'}</b><span>${x.d.name}${x.b ? `<br>停電 ${x.b}時間` : ''}</span></div>`).join('')}</div>
       ${black.length ? '<div class="jp-why" id="jpWhy"></div>' : ''}
       ${hints.length ? `<div class="jp-hint"><b>💡 ヒント</b>${hints.map(h => `<p>${h}</p>`).join('')}${st.tries.length >= 2 ? `<p class="more">📖 ${ch.hint}</p>${ch.refHide ? '<p class="more">▮ スライダーに 答えの 帯を 出したよ</p>' : ''}` : ''}</div>` : ''}
       ${all && ch.learn ? `<div class="jp-learn">📚 ${ch.learn()}</div>` : ''}
     </div></div>
-    <div class="row2">${all ? `<button class="btn" id="jpAgain">🔄 もう一度 ちょうせん</button><button class="btn go" id="jpNext">${st.mode === 'p4' ? '🗣️ 国民の 声へ' : last ? '📜 宣言へ' : '▶ つぎの チャプターへ'}</button>` : `<button class="btn go" id="jpAgain">🔄 わりあいを 見なおす</button>`}</div>`, 'wide');
+    <div class="row2">${all ? `<button class="btn" id="jpAgain">🔄 もう一度 ちょうせん</button><button class="btn go" id="jpNext">${st.mode === 'tut' ? '🎓 チュートリアル おわり ▶' : st.mode === 'p4' ? '🗣️ 国民の 声へ' : last ? '📜 宣言へ' : '▶ つぎの チャプターへ'}</button>` : `<button class="btn go" id="jpAgain">🔄 わりあいを 見なおす</button>`}</div>`, 'wide');
   c.querySelector('#jpAgain').onclick = () => { sfx('tap'); hideModal(); if (!all && ch.refHide && st.tries.length >= 2 && !st.showRef) { st.showRef = true; buildHUD(); update(); } };
   if (black.length) dayWhy(c, ch, black, ask);
   const nx = c.querySelector('#jpNext');
   readCheck(c, show, nx, r, ch);
-  if (nx) nx.onclick = () => { sfx('tap'); st.results.push({ ch, mix: Object.assign({}, mix), r, rank }); quiz(ch, () => { if (st.mode === 'p4') voices(r); else if (last) declare(); else { st.ci++; startChapter(); } }); };
+  if (nx) nx.onclick = () => { if (st.mode === 'tut') return tutFinish(); sfx('tap'); st.results.push({ ch, mix: Object.assign({}, mix), r, rank }); quiz(ch, () => { if (st.mode === 'p4') voices(r); else if (last) declare(); else { st.ci++; startChapter(); } }); };
 }
 /* ⚡ 停電した 日：その日の グラフを 見て「どうすれば 停電しない？」を 考える
    （スライダーを 動かして ⭕に する だけで 終わらせない。チャプターで はじめて 停電した ときは 答えるまで もどれない） */
@@ -824,7 +1007,7 @@ function readCheck(c, show, nx, r, ch) {
   const label = nx ? nx.innerHTML : '';
   if (nx) { nx.disabled = true; nx.innerHTML = '👆 先に 📊の 表を たしかめよう'; }
   const left = () => rows.length - Object.keys(ans).length;
-  const paint = () => { go.disabled = left() > 0; go.textContent = left() ? `たしかめる（のこり ${left()}つ）` : 'たしかめる'; };
+  const paint = () => { go.disabled = left() > 0; go.textContent = left() ? `👆 あと ${left()}つ えらんでね` : '✅ たしかめる'; };
   rows.forEach(x => x.querySelectorAll('.ch button').forEach(bt => bt.onclick = () => {
     ans[x.dataset.mk] = bt.dataset.v; x.querySelectorAll('.ch button').forEach(o => o.classList.toggle('on', o === bt)); sfx('tap'); paint(); }));
   paint();
@@ -1147,5 +1330,5 @@ function orbit(el) {
   el.addEventListener('dblclick', () => { if (R3) Object.assign(R3.cam, { th: 0, ph: 0.93, zoom: 1 }); });
 }
 
-EC.Japan = { open, _quit: () => { onBack = null; opts = {}; if (root) close(); }, _metrics: metrics, _modes: MODES, _normalize: normalize, _startMix: startMix, _sim: simulate, _days: DAYS, _gOk: gOk, _base: BASE, _src: SRC, _keys: KEYS, _p4: { goals: p4Goals, set: m => { Object.assign(mix, m); update(); }, voices: () => voices(metrics(mix)), compare: () => comparePlan() } };
+EC.Japan = { open, _quit: () => { onBack = null; opts = {}; if (root) close(); }, _metrics: metrics, _modes: MODES, _normalize: normalize, _startMix: startMix, _sim: simulate, _days: DAYS, _gOk: gOk, _base: BASE, _src: SRC, _keys: KEYS, _tut: () => tut, _p4: { goals: p4Goals, set: m => { Object.assign(mix, m); update(); }, voices: () => voices(metrics(mix)), compare: () => comparePlan() } };
 })(window);
